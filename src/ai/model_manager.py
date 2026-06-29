@@ -1,0 +1,180 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Local LLM model management for Ollama and llama.cpp."""
+
+import json
+import logging
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
+import requests
+
+from src.ai.prompt_templates import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from src.utils.exceptions import AIError, ModelNotFoundError
+
+logger = logging.getLogger(__name__)
+
+
+def is_ollama_available(base_url: str = "http://localhost:11434") -> bool:
+    """Check if Ollama service is running."""
+    try:
+        resp = requests.get(f"{base_url}/api/tags", timeout=3)
+        return resp.status_code == 200
+    except (requests.ConnectionError, requests.Timeout):
+        return False
+
+
+def is_llama_cpp_available(model_path: Optional[str] = None) -> bool:
+    """Check if llama.cpp model file exists."""
+    if not model_path:
+        return False
+    import os
+    return os.path.isfile(model_path)
+
+
+def generate_structured_notes(
+    text: str,
+    config: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Generate structured notes from text using local LLM.
+
+    Tries Ollama first, falls back to llama.cpp, then fallback.
+
+    Args:
+        text: Cleaned lecture text
+        config: Model configuration overrides
+
+    Returns:
+        Dict matching output schema
+    """
+    cfg = config or {}
+    backend = cfg.get("llm_backend", "ollama")
+    can_fallback = backend == "ollama"
+
+    if backend == "ollama" or can_fallback:
+        if is_ollama_available(cfg.get("ollama_base_url", "http://localhost:11434")):
+            try:
+                return _query_ollama(text, cfg)
+            except Exception as exc:
+                logger.warning(f"Ollama failed: {exc}")
+                if not can_fallback:
+                    raise AIError(f"Ollama failed: {exc}") from exc
+
+    if backend == "llama.cpp" or can_fallback:
+        try:
+            return _query_llama_cpp(text, cfg)
+        except Exception as exc:
+            logger.warning(f"llama.cpp failed: {exc}")
+            if not can_fallback:
+                raise AIError(f"llama.cpp failed: {exc}") from exc
+
+    return _generate_fallback(text, cfg)
+
+
+def _query_ollama(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Query Ollama API for structured note generation."""
+    base_url = config.get("ollama_base_url", "http://localhost:11434")
+    model = config.get("ollama_model", "phi3:mini")
+    prompt = USER_PROMPT_TEMPLATE.format(text=text[:3000])
+    payload = {
+        "model": model,
+        "system": SYSTEM_PROMPT,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": config.get("temperature", 0.1),
+            "num_ctx": config.get("context_length", 4096),
+        },
+    }
+    resp = requests.post(
+        f"{base_url}/api/generate",
+        json=payload,
+        timeout=config.get("timeout", 120),
+    )
+    if resp.status_code == 404:
+        raise ModelNotFoundError(
+            f"Model '{model}' not found. Run: ollama pull {model}"
+        )
+    if resp.status_code != 200:
+        raise AIError(f"Ollama error: {resp.status_code}")
+    return _parse_json_response(resp.json().get("response", ""), text)
+
+
+def _query_llama_cpp(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Query llama.cpp for structured note generation."""
+    model_path = config.get("llama_cpp_model_path")
+    if not model_path or not is_llama_cpp_available(model_path):
+        raise ModelNotFoundError("llama.cpp model file not found.")
+    try:
+        from llama_cpp import Llama
+    except ImportError:
+        raise AIError("llama-cpp-python not installed.")
+    llm = Llama(
+        model_path=model_path,
+        n_ctx=config.get("context_length", 4096),
+        n_threads=config.get("cpu_threads", None),
+        verbose=False,
+    )
+    prompt = USER_PROMPT_TEMPLATE.format(text=text[:2000])
+    full = f"<|system|>\n{SYSTEM_PROMPT}\n</s>\n<|user|>\n{prompt}\n</s>\n<|assistant|>\n"
+    output = llm(full, max_tokens=1024, temperature=config.get("temperature", 0.1),
+                 stop=["</s>", "<|end|>"])
+    return _parse_json_response(output["choices"][0]["text"].strip(), text)
+
+
+def _parse_json_response(response_text: str, original_text: str) -> Dict[str, Any]:
+    """Parse JSON from LLM response with fallback."""
+    import re
+    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
+    if not json_match:
+        json_match = re.search(r"\{[^{}]*\"title\"[^{}]*\}", response_text, re.DOTALL)
+    if json_match:
+        try:
+            result = json.loads(json_match.group(1))
+            result["created_at"] = datetime.now(timezone.utc).isoformat()
+            return result
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return _generate_fallback(original_text, {})
+
+
+def _generate_fallback(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate structured data fallback when AI is unavailable."""
+    from src.preprocessing.text_cleaner import extract_title
+    logger.info("Using fallback generation (no AI model available)")
+    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    words = text.split()
+    word_count = len(words)
+    avg_word_len = sum(len(w) for w in words) / max(word_count, 1)
+
+    if avg_word_len < 5 and word_count < 500:
+        difficulty = "Beginner"
+    elif avg_word_len < 7 or word_count < 2000:
+        difficulty = "Intermediate"
+    else:
+        difficulty = "Advanced"
+
+    stop_words = {"the","a","an","and","or","but","in","on","at","to","for",
+                  "of","with","by","is","are","was","were","this","that",
+                  "these","those","it","its","from"}
+    words_lower = [w.lower().strip(".,;:!?()[]{}'\"") for w in words
+                   if w.isalpha() and len(w) > 3]
+    freq = {}
+    for w in words_lower:
+        if w not in stop_words:
+            freq[w] = freq.get(w, 0) + 1
+    sorted_w = sorted(freq.items(), key=lambda x: -x[1])
+    keywords = [w for w, _ in sorted_w[:15]]
+
+    return {
+        "title": extract_title(text),
+        "subject": "General",
+        "topics": ["Lecture Content"],
+        "keywords": keywords,
+        "summary": text[:500].strip() + ("..." if len(text) > 500 else ""),
+        "important_points": [lines[i] for i in range(min(5, len(lines)))
+                             if len(lines[i]) > 20],
+        "possible_exam_questions": [],
+        "difficulty": difficulty,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+

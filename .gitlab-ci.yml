@@ -1,0 +1,76 @@
+stages:
+  - lint
+  - test
+  - security
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+before_script:
+  - python -m venv .venv
+  - source .venv/bin/activate || .venv\Scripts\activate
+  - pip install -r requirements.txt
+
+ruff:
+  stage: lint
+  script:
+    - pip install ruff
+    - ruff check src/ tests/
+  allow_failure: false
+
+black:
+  stage: lint
+  script:
+    - pip install black
+    - black --check --line-length=88 src/ tests/
+  allow_failure: false
+
+isort:
+  stage: lint
+  script:
+    - pip install isort
+    - isort --check-only --profile=black --line-length=88 src/ tests/
+  allow_failure: false
+
+mypy:
+  stage: lint
+  script:
+    - pip install mypy
+    - mypy --strict --ignore-missing-imports src/
+  allow_failure: true
+
+pytest:
+  stage: test
+  script:
+    - pip install pytest pytest-cov
+    - pytest --cov=src/ --cov-report=term --cov-report=html tests/
+  artifacts:
+    paths:
+      - htmlcov/
+    expire_in: 30 days
+
+bandit:
+  stage: security
+  script:
+    - pip install bandit
+    - bandit -ll -q -r src/
+  allow_failure: true
+
+vulture:
+  stage: security
+  script:
+    - pip install vulture
+    - vulture src/ --min-confidence 80
+  allow_failure: true
+
+detect-secrets:
+  stage: security
+  script:
+    - pip install detect-secrets
+    - detect-secrets scan --baseline .secrets.baseline || echo "No baseline"
+  allow_failure: true

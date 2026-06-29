@@ -1,93 +1,91 @@
-# Lecture Notes Organizer
+# Offline AI Lecture Notes Organizer
 
+> CPU-First Hackathon — Convert unstructured lecture notes into structured study material, completely offline.
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Overview
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The **Offline AI Lecture Notes Organizer** is a Streamlit-based desktop application that transforms unstructured lecture notes (PDF, DOCX, TXT, and optionally scanned PDFs/images) into rich, structured study material. It runs **entirely on CPU** with **no cloud dependencies**, using local Small Language Models (SLMs) to extract topics, keywords, summaries, exam questions, and more.
 
-## Add your files
+Priorities:
+- Privacy — All processing happens on your machine
+- Offline capability — No internet required after initial setup
+- CPU efficiency — Optimized for laptops and low-resource environments
+- Graceful degradation — Works even when optional components are unavailable
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Problem Statement
 
-```
-cd existing_repo
-git remote add origin https://code.swecha.org/SishirMadhavan23/lecture-notes-organizer.git
-git branch -M main
-git push -uf origin main
-```
+Students and professionals accumulate vast collections of lecture notes. Manually organizing these into searchable, structured study material is time-consuming. Existing solutions require cloud AI services, compromising privacy and requiring internet connectivity.
 
-## Integrate with your tools
+**Our solution**: A fully offline, CPU-only desktop application that automatically extracts, cleans, and enriches lecture notes using local AI models, storing everything in a local SQLite database for fast search and retrieval.
 
-* [Set up project integrations](https://code.swecha.org/SishirMadhavan23/lecture-notes-organizer/-/settings/integrations)
+## Features
 
-## Collaborate with your team
+- Multi-format Ingestion: PDF, DOCX, TXT with auto-detection
+- Scanned Document OCR: Tesseract OCR (optional, graceful fallback)
+- Text Normalization: Automated cleaning and structure detection
+- Local AI: Phi-3 Mini / Qwen2.5 via Ollama or llama.cpp on CPU
+- Structured Output: Topics, keywords, summaries, exam questions, difficulty
+- Local Storage: SQLite — no cloud
+- Full-text Search: Across titles, topics, keywords, and content
+- System Dashboard: Real-time status of models, storage, system health
+- Fully Offline: Zero internet after setup
+- Graceful Failure: Missing dependencies handled cleanly
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## AI Workflow
 
-## Test and Deploy
+Input Documents -> Text Extraction (PyMuPDF/python-docx/Tesseract) -> Text Cleaning -> Local LLM -> JSON -> SQLite -> Search
 
-Use the built-in continuous integration in GitLab.
+## Tech Stack
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+Language: Python 3.11+ | UI: Streamlit | PDF: PyMuPDF | DOCX: python-docx | OCR: pytesseract | LLM: Ollama/llama.cpp | DB: SQLite+SQLAlchemy | Search: FTS5 | Tools: Ruff/Black/isort/mypy/Bandit/pytest
 
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+---
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Prerequisites
+- Python 3.11+
+- Tesseract OCR (optional, for scanned documents)
+- Ollama (recommended, for AI features)
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Setup
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+git clone https://code.swecha.org/SishirMadhavan23/lecture-notes-organizer.git
+cd lecture-notes-organizer
+python -m venv venv
+venv\Scripts\activate    # Windows
+pip install -r requirements.txt
+ollama pull phi3:mini    # Optional
+streamlit run src/app.py
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Testing
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+pytest
+pytest --cov=src --cov-report=html
+```
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+GNU General Public License v3.0 — see LICENSE.
+
+## Contributing
+
+See CONTRIBUTING.md.
+
+## Security
+
+See SECURITY.md.
+
+---
+
+<p align="center">Built for the CPU-First Hackathon</p>
+
