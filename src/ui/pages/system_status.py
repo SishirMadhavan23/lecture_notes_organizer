@@ -74,23 +74,24 @@ def render_system_status(config: Dict[str, Any]) -> None:
 
     with st.expander("📦 Installed Packages Check"):
         packages = {
-            "PyMuPDF (fitz)": False,
-            "python-docx": False,
-            "streamlit": False,
-            "SQLAlchemy": False,
-            "requests": False,
-            "pytesseract": False,
-            "Pillow": False,
-            "llama-cpp-python": False,
-            "unidecode": False,
+            "PyMuPDF (fitz)": "fitz",
+            "python-docx": "docx",
+            "streamlit": "streamlit",
+            "SQLAlchemy": "sqlalchemy",
+            "requests": "requests",
+            "pytesseract": "pytesseract",
+            "Pillow": "PIL",
+            "llama-cpp-python": "llama_cpp",
+            "unidecode": "unidecode",
         }
-        for pkg in packages:
+        package_status = {label: False for label in packages}
+        for label, module_name in packages.items():
             try:
-                __import__(pkg.split()[0].replace("-", "_"))
-                packages[pkg] = True
+                __import__(module_name)
+                package_status[label] = True
             except ImportError:
                 pass
 
-        for pkg, installed in packages.items():
+        for pkg, installed in package_status.items():
             icon = "✅" if installed else "❌"
             st.markdown(f"{icon} **{pkg}**")

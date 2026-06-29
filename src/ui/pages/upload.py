@@ -53,6 +53,7 @@ def process_uploaded_file(uploaded_file, config: Dict[str, Any]) -> None:
 
         progress_bar = st.progress(0, text="Starting...")
 
+        tmp_path = ""
         try:
             # Step 1: Save to temp file
             progress_bar.progress(10, text="Saving file...")
@@ -80,10 +81,7 @@ def process_uploaded_file(uploaded_file, config: Dict[str, Any]) -> None:
 
             # Step 5: Save to database
             progress_bar.progress(90, text="Saving to database...")
-            doc_id = save_document(tmp_path, raw_text, cleaned, metadata)
-
-            # Cleanup temp file
-            os.unlink(tmp_path)
+            doc_id = save_document(uploaded_file.name, raw_text, cleaned, metadata)
 
             progress_bar.progress(100, text="✅ Complete!")
             st.success(f"Processed! (ID: {doc_id})")
@@ -94,6 +92,9 @@ def process_uploaded_file(uploaded_file, config: Dict[str, Any]) -> None:
         except Exception as e:
             progress_bar.empty()
             st.error(f"❌ Error: {e}")
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
 
 def extract_text(file_path: str, ext: str, config: Dict[str, Any]) -> str:

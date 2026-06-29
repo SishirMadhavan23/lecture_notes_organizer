@@ -32,6 +32,14 @@ class Document(Base):
         uselist=False, cascade="all, delete-orphan"
     )
 
+    def __init__(self, **kwargs: Any) -> None:
+        """Apply Python-side defaults expected by the app and tests."""
+        super().__init__(**kwargs)
+        if self.status is None:
+            self.status = "pending"
+        if self.created_at is None:
+            self.created_at = datetime.now(timezone.utc)
+
 
 class NoteMetadata(Base):
     """Structured metadata extracted from lecture notes via AI."""
