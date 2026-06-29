@@ -11,11 +11,13 @@ import streamlit as st
 
 from src.storage.database import get_engine
 from src.ui.components.sidebar import render_sidebar
+from src.ui.components.dashboard import render_footer
 from src.ui.pages.search import render_search
 from src.ui.pages.settings import render_settings
 from src.ui.pages.system_status import render_system_status
 from src.ui.pages.upload import render_upload_page
 from src.ui.pages.view_notes import render_view_notes
+from src.ui.theme import apply_theme
 from src.utils.config import load_config
 
 
@@ -23,6 +25,10 @@ def init_session_state(config) -> None:
     """Initialize Streamlit session state."""
     if "current_page" not in st.session_state:
         st.session_state.current_page = "Upload"
+    requested_page = st.query_params.get("page")
+    valid_pages = {"Upload", "View Notes", "Search", "Settings", "System Status"}
+    if requested_page in valid_pages:
+        st.session_state.current_page = requested_page
     if "config" not in st.session_state:
         # Build config dict from AppConfig
         st.session_state.config = {
@@ -33,6 +39,7 @@ def init_session_state(config) -> None:
             "temperature": config.temperature,
             "context_length": config.context_length,
             "tesseract_enabled": config.tesseract_enabled,
+            "tesseract_path": config.tesseract_path,
             "tesseract_lang": config.tesseract_lang,
             "database_url": config.database_url,
             "cache_enabled": config.cache_enabled,
@@ -47,6 +54,7 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    apply_theme()
 
     config = load_config()
     init_session_state(config)
@@ -73,11 +81,13 @@ def main() -> None:
         # Update config from session state
         for key in ["llm_backend", "temperature", "context_length",
                      "tesseract_enabled", "ollama_base_url", "ollama_model",
-                     "llama_cpp_model_path"]:
+                     "llama_cpp_model_path", "tesseract_path", "database_url"]:
             if key in st.session_state:
                 cfg[key] = st.session_state[key]
     elif page == "System Status":
         render_system_status(cfg)
+
+    render_footer()
 
 
 if __name__ == "__main__":

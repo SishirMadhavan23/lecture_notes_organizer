@@ -5,14 +5,34 @@ import shutil
 from typing import Optional
 
 from src.utils.exceptions import OCRError
+from src.utils.config import load_config
 
 
-def is_tesseract_available() -> bool:
+def _resolve_tesseract_path(tesseract_path: Optional[str] = None) -> Optional[str]:
+    """Resolve the configured Tesseract executable path."""
+    if tesseract_path:
+        return tesseract_path
+    config = load_config()
+    if config.tesseract_path:
+        return config.tesseract_path
+    return shutil.which("tesseract")
+
+
+def is_tesseract_available(tesseract_path: Optional[str] = None) -> bool:
     """Check if Tesseract OCR is installed."""
-    return shutil.which("tesseract") is not None
+    resolved_path = _resolve_tesseract_path(tesseract_path)
+    if tesseract_path:
+        return bool(resolved_path and shutil.which(resolved_path))
+    if resolved_path and shutil.which(resolved_path):
+        return True
+    return bool(resolved_path and shutil.which("tesseract"))
 
 
-def ocr_image(image_path: str, lang: str = "eng") -> str:
+def ocr_image(
+    image_path: str,
+    lang: str = "eng",
+    tesseract_path: Optional[str] = None,
+) -> str:
     """Perform OCR on an image file.
 
     Raises:
@@ -26,7 +46,10 @@ def ocr_image(image_path: str, lang: str = "eng") -> str:
             "pytesseract/Pillow not installed. "
             "Install: pip install pytesseract Pillow"
         )
-    if not is_tesseract_available():
+    resolved_path = _resolve_tesseract_path(tesseract_path)
+    if resolved_path:
+        pytesseract.pytesseract.tesseract_cmd = resolved_path
+    if not is_tesseract_available(resolved_path):
         raise OCRError("Tesseract OCR engine not found on system.")
     try:
         image = Image.open(image_path)
@@ -35,7 +58,12 @@ def ocr_image(image_path: str, lang: str = "eng") -> str:
         raise OCRError(f"OCR processing failed: {exc}") from exc
 
 
-def ocr_pdf(pdf_path: str, lang: str = "eng", dpi: int = 300) -> str:
+def ocr_pdf(
+    pdf_path: str,
+    lang: str = "eng",
+    dpi: int = 300,
+    tesseract_path: Optional[str] = None,
+) -> str:
     """Perform OCR on a scanned PDF.
 
     Raises:
@@ -49,7 +77,10 @@ def ocr_pdf(pdf_path: str, lang: str = "eng", dpi: int = 300) -> str:
             "pytesseract/pdf2image not installed. "
             "Install: pip install pytesseract pdf2image Pillow"
         )
-    if not is_tesseract_available():
+    resolved_path = _resolve_tesseract_path(tesseract_path)
+    if resolved_path:
+        pytesseract.pytesseract.tesseract_cmd = resolved_path
+    if not is_tesseract_available(resolved_path):
         raise OCRError("Tesseract OCR engine not found on system.")
     try:
         images = convert_from_path(pdf_path, dpi=dpi)

@@ -9,15 +9,17 @@ from typing import Any, Dict, Optional
 import requests
 
 from src.ai.prompt_templates import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from src.utils.config import load_config
 from src.utils.exceptions import AIError, ModelNotFoundError
 
 logger = logging.getLogger(__name__)
 
 
-def is_ollama_available(base_url: str = "http://localhost:11434") -> bool:
+def is_ollama_available(base_url: Optional[str] = None) -> bool:
     """Check if Ollama service is running."""
+    resolved_base_url = base_url or load_config().ollama_base_url
     try:
-        resp = requests.get(f"{base_url}/api/tags", timeout=3)
+        resp = requests.get(f"{resolved_base_url}/api/tags", timeout=3)
         return resp.status_code == 200
     except (requests.ConnectionError, requests.Timeout):
         return False
@@ -46,7 +48,16 @@ def generate_structured_notes(
     Returns:
         Dict matching output schema
     """
-    cfg = config or {}
+    saved_config = load_config()
+    cfg = {
+        "llm_backend": saved_config.llm_backend,
+        "ollama_base_url": saved_config.ollama_base_url,
+        "ollama_model": saved_config.ollama_model,
+        "llama_cpp_model_path": saved_config.llama_cpp_model_path,
+        "temperature": saved_config.temperature,
+        "context_length": saved_config.context_length,
+        **(config or {}),
+    }
     backend = cfg.get("llm_backend", "ollama")
     can_fallback = backend == "ollama"
 
@@ -177,4 +188,3 @@ def _generate_fallback(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
         "difficulty": difficulty,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-

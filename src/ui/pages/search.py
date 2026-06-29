@@ -6,13 +6,20 @@ from typing import Any, Dict
 import streamlit as st
 
 from src.storage.database import search_notes
+from src.ui.components.page_header import render_page_header
 from src.ui.components.note_card import render_note_card
 
 
 def render_search(config: Dict[str, Any]) -> None:
     """Render the search page."""
-    st.header("🔍 Search Notes")
-    st.markdown("Search across all your organized notes.")
+    render_page_header(
+        "Search Organized Notes",
+        (
+            "Search across titles, subjects, summaries, topics, and extracted "
+            "content to quickly recover relevant study material."
+        ),
+        "Research Retrieval",
+    )
 
     query = st.text_input(
         "Search query",
@@ -32,4 +39,4 @@ def render_search(config: Dict[str, Any]) -> None:
         for note in results:
             render_note_card(note, expanded=True)
     else:
-        st.info("Enter a search query above to find notes.")
+        st.info("Enter a search query above to explore your organized notes.")

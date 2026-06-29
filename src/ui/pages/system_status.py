@@ -3,6 +3,7 @@
 
 import platform
 import sys
+from html import escape
 from typing import Any, Dict
 
 import streamlit as st
@@ -10,61 +11,107 @@ import streamlit as st
 from src.ai.model_manager import is_ollama_available, is_llama_cpp_available
 from src.ingestion.ocr_processor import is_tesseract_available
 from src.storage.database import get_stats
+from src.ui.components.dashboard import render_stat_cards, render_status_card
+from src.ui.components.page_header import render_page_header
 
 
 def render_system_status(config: Dict[str, Any]) -> None:
     """Render the system status dashboard."""
-    st.header("📊 System Status")
-    st.markdown("Real-time status of models, storage, and system health.")
+    render_page_header(
+        "System Status",
+        (
+            "Review local model readiness, OCR availability, storage volume, and "
+            "environment health before processing new material."
+        ),
+        "Operations",
+    )
 
+    ollama_ok = is_ollama_available(
+        config.get("ollama_base_url", "http://localhost:11434")
+    )
+    tesseract_ok = is_tesseract_available(config.get("tesseract_path"))
+    model_path = config.get("llama_cpp_model_path", "")
+    llama_ok = is_llama_cpp_available(model_path) if model_path else False
+
+    st.markdown("### Configuration health")
     col1, col2, col3 = st.columns(3)
-
     with col1:
-        ollama_ok = is_ollama_available(
-            config.get("ollama_base_url", "http://localhost:11434")
+        render_status_card(
+            "Ollama",
+            "Running" if ollama_ok else "Unavailable",
+            "Local model server is ready."
+            if ollama_ok
+            else "Server could not be reached.",
+            "success" if ollama_ok else "error",
+            "AI",
         )
-        if ollama_ok:
-            st.metric("Ollama", "✅ Running")
-        else:
-            st.metric("Ollama", "❌ Not detected")
-
     with col2:
-        tesseract_ok = is_tesseract_available()
-        if tesseract_ok:
-            st.metric("Tesseract OCR", "✅ Available")
-        else:
-            st.metric("Tesseract OCR", "⚠️ Not installed")
-
+        render_status_card(
+            "Tesseract OCR",
+            "Configured" if tesseract_ok else "Not installed",
+            "OCR is available for scanned notes."
+            if tesseract_ok
+            else "Install or select an executable.",
+            "success" if tesseract_ok else "error",
+            "OCR",
+        )
     with col3:
-        model_path = config.get("llama_cpp_model_path", "")
-        llama_ok = is_llama_cpp_available(model_path) if model_path else False
-        if llama_ok:
-            st.metric("llama.cpp", "✅ Model ready")
-        elif model_path:
-            st.metric("llama.cpp", "❌ Model not found")
-        else:
-            st.metric("llama.cpp", "⏸️ Not configured")
+        render_status_card(
+            "llama.cpp",
+            "Configured" if llama_ok else ("Error" if model_path else "Optional"),
+            "GGUF model is ready."
+            if llama_ok
+            else (
+                "Configured model was not found."
+                if model_path
+                else "Optional CPU inference backend."
+            ),
+            "success" if llama_ok else ("error" if model_path else "warning"),
+            "CPU",
+        )
 
-    st.markdown("---")
+    st.markdown("### Processing statistics")
 
     try:
         stats = get_stats()
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Documents", stats.get("total_documents", 0))
-        with col2:
-            st.metric("Processed", stats.get("processed", 0))
-        with col3:
-            st.metric("Errors", stats.get("errors", 0))
-        with col4:
-            db_size = stats.get("database_size_bytes", 0)
-            st.metric("DB Size", f"{db_size / 1024:.1f} KB" if db_size else "0 KB")
+        durations = st.session_state.get("processing_durations", [])
+        average_duration = sum(durations) / len(durations) if durations else 0.0
+        backend = config.get("llm_backend", "ollama")
+        current_model = (
+            config.get("ollama_model", "Not selected")
+            if backend == "ollama"
+            else (model_path.rsplit("/", 1)[-1].rsplit("\\", 1)[-1] or "Not selected")
+        )
+        render_stat_cards(
+            (
+                {
+                    "label": "Documents processed",
+                    "value": str(stats.get("processed", 0)),
+                    "hint": "Stored in SQLite",
+                },
+                {
+                    "label": "Pages processed",
+                    "value": str(st.session_state.get("pages_processed", 0)),
+                    "hint": "This session",
+                },
+                {
+                    "label": "Average processing time",
+                    "value": f"{average_duration:.1f}s" if durations else "--",
+                    "hint": "This session",
+                },
+                {
+                    "label": "Current AI model",
+                    "value": str(current_model),
+                    "hint": backend,
+                },
+            )
+        )
     except Exception as e:
         st.warning(f"Could not read database stats: {e}")
 
     st.markdown("---")
 
-    with st.expander("🖥️ System Information"):
+    with st.expander("System information"):
         st.json({
             "Platform": platform.platform(),
             "Python": sys.version,
@@ -72,7 +119,7 @@ def render_system_status(config: Dict[str, Any]) -> None:
             "Processor": platform.processor(),
         })
 
-    with st.expander("📦 Installed Packages Check"):
+    with st.expander("Installed packages"):
         packages = {
             "PyMuPDF (fitz)": "fitz",
             "python-docx": "docx",
@@ -92,6 +139,10 @@ def render_system_status(config: Dict[str, Any]) -> None:
             except ImportError:
                 pass
 
-        for pkg, installed in package_status.items():
-            icon = "✅" if installed else "❌"
-            st.markdown(f"{icon} **{pkg}**")
+        rows = "".join(
+            f'<div class="status-list-row"><span>{escape(pkg)}</span>'
+            f'<span class="status-badge status-badge--{"success" if installed else "error"}">'
+            f'{"Configured" if installed else "Not installed"}</span></div>'
+            for pkg, installed in package_status.items()
+        )
+        st.markdown(f'<div class="status-list">{rows}</div>', unsafe_allow_html=True)
