@@ -6,7 +6,7 @@ from typing import List
 
 from src.utils.exceptions import UnsupportedFormatError
 
-SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt", ".pptx", ".ppt"}
 SUPPORTED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".bmp"}
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024
 

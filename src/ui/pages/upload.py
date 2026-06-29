@@ -15,6 +15,10 @@ from src.ai.model_manager import generate_structured_notes
 from src.ingestion.docx_extractor import extract_text_from_docx
 from src.ingestion.ocr_processor import is_tesseract_available, ocr_pdf
 from src.ingestion.pdf_extractor import extract_text_from_pdf
+from src.ingestion.pptx_extractor import (
+    extract_presentation_metadata,
+    extract_text_from_pptx,
+)
 from src.ingestion.txt_extractor import extract_text_from_txt
 from src.preprocessing.text_cleaner import clean_text
 from src.storage.database import save_document
@@ -38,7 +42,7 @@ def _format_file_size(size_bytes: int) -> str:
 
 def _get_supported_extensions() -> list[str]:
     """Return supported extensions in a stable order."""
-    ordered = [".pdf", ".docx", ".txt"]
+    ordered = [".pdf", ".docx", ".txt", ".pptx", ".ppt"]
     known = set(get_supported_extensions())
     return [ext for ext in ordered if ext in known]
 
@@ -51,7 +55,10 @@ def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> Optional[st
     extension = Path(uploaded_file.name).suffix.lower()
     supported_extensions = set(_get_supported_extensions())
     if extension not in supported_extensions:
-        return "Unsupported file type. Please upload a PDF, DOCX, or TXT file."
+        return (
+            "Unsupported file type. Please upload a PDF, DOCX, TXT, PPTX, "
+            "or PPT file."
+        )
 
     file_size_bytes = len(uploaded_file.getvalue())
     max_size_bytes = min(max_file_size_mb * 1024 * 1024, MAX_FILE_SIZE_BYTES)
@@ -61,6 +68,12 @@ def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> Optional[st
         )
 
     return None
+
+
+@st.cache_data(show_spinner=False)
+def _inspect_presentation(file_bytes: bytes, extension: str) -> Dict[str, Any]:
+    """Validate and inspect a PowerPoint file for upload preview metadata."""
+    return extract_presentation_metadata(file_bytes, extension)
 
 
 def _get_upload_timestamp(uploaded_file) -> str:
@@ -84,7 +97,9 @@ def _render_upload_dropzone() -> None:
                 <div class="upload-icon" aria-hidden="true">↑</div>
                 <p class="upload-title">Drag your lecture notes here</p>
                 <p class="upload-subtitle">or click to browse</p>
-                <p class="upload-supported">Supported formats: PDF • DOCX • TXT</p>
+                <p class="upload-supported">
+                    Supported formats: PDF • DOCX • TXT • PPTX • PPT
+                </p>
             </div>
         </section>
         """,
@@ -92,10 +107,55 @@ def _render_upload_dropzone() -> None:
     )
 
 
-def _render_upload_preview(uploaded_file, timestamp: str) -> None:
+def _render_upload_preview(
+    uploaded_file,
+    timestamp: str,
+    presentation_metadata: Optional[Dict[str, Any]] = None,
+) -> None:
     """Render the selected file preview panel."""
     file_type = Path(uploaded_file.name).suffix.lower().lstrip(".").upper()
     file_size = _format_file_size(len(uploaded_file.getvalue()))
+    preview_items = [
+        ("File type", escape(file_type)),
+        ("File size", escape(file_size)),
+    ]
+
+    if presentation_metadata:
+        preview_items.append(
+            ("Slides", str(int(presentation_metadata.get("slide_count", 0))))
+        )
+    preview_items.extend(
+        [
+            ("Upload timestamp", escape(timestamp)),
+            ("Status", "Validated and queued"),
+        ]
+    )
+    if presentation_metadata and presentation_metadata.get("author"):
+        preview_items.append(("Author", escape(str(presentation_metadata["author"]))))
+    if presentation_metadata and presentation_metadata.get("created"):
+        preview_items.append(("Created", escape(str(presentation_metadata["created"]))))
+
+    preview_grid = "".join(
+        f"""
+        <div>
+            <div class="upload-preview-label">{escape(label)}</div>
+            <div class="upload-preview-value">{value}</div>
+        </div>
+        """
+        for label, value in preview_items
+    )
+
+    preview_text = ""
+    if presentation_metadata and presentation_metadata.get("preview"):
+        preview_text = f"""
+        <div class="upload-preview-note">
+            <div class="upload-preview-label">Preview</div>
+            <div class="page-description" style="margin-top: 0.35rem;">
+                {escape(str(presentation_metadata["preview"]))}
+            </div>
+        </div>
+        """
+
     st.markdown(
         f"""
         <section class="upload-preview">
@@ -109,23 +169,9 @@ def _render_upload_preview(uploaded_file, timestamp: str) -> None:
                 File uploaded successfully and ready for processing.
             </p>
             <div class="upload-preview-grid">
-                <div>
-                    <div class="upload-preview-label">File type</div>
-                    <div class="upload-preview-value">{escape(file_type)}</div>
-                </div>
-                <div>
-                    <div class="upload-preview-label">File size</div>
-                    <div class="upload-preview-value">{escape(file_size)}</div>
-                </div>
-                <div>
-                    <div class="upload-preview-label">Upload timestamp</div>
-                    <div class="upload-preview-value">{escape(timestamp)}</div>
-                </div>
-                <div>
-                    <div class="upload-preview-label">Status</div>
-                    <div class="upload-preview-value">Validated and queued</div>
-                </div>
+                {preview_grid}
             </div>
+            {preview_text}
         </section>
         """,
         unsafe_allow_html=True,
@@ -147,15 +193,16 @@ def render_upload_page(config: Dict[str, Any]) -> None:
 
     supported_extensions = [ext.lstrip(".") for ext in _get_supported_extensions()]
     max_file_size_mb = int(config.get("max_file_size_mb", 50))
+    supported_label = "PDF, DOCX, TXT, PPTX, PPT"
     uploaded_file = st.file_uploader(
         "Upload a lecture note file",
         type=supported_extensions,
         accept_multiple_files=False,
-        help="Accepted formats: PDF, DOCX, TXT",
+        help=f"Accepted formats: {supported_label}",
         key=UPLOAD_KEY,
     )
 
-    st.caption("Supported formats: PDF • DOCX • TXT")
+    st.caption("Supported formats: PDF • DOCX • TXT • PPTX • PPT")
 
     if not uploaded_file:
         st.info("Drag your lecture notes here or click to browse for a file.")
@@ -163,10 +210,25 @@ def render_upload_page(config: Dict[str, Any]) -> None:
 
     validation_error = _validate_uploaded_file(uploaded_file, max_file_size_mb)
     upload_timestamp = _get_upload_timestamp(uploaded_file)
+    presentation_metadata: Optional[Dict[str, Any]] = None
+    extension = Path(uploaded_file.name).suffix.lower()
+    if validation_error is None and extension in {".pptx", ".ppt"}:
+        try:
+            presentation_metadata = _inspect_presentation(
+                uploaded_file.getvalue(),
+                extension,
+            )
+        except IngestionError as exc:
+            validation_error = str(exc)
+
     if validation_error:
         st.error(validation_error)
     else:
-        _render_upload_preview(uploaded_file, upload_timestamp)
+        _render_upload_preview(
+            uploaded_file,
+            upload_timestamp,
+            presentation_metadata,
+        )
 
     stepper_placeholder = st.empty()
     with stepper_placeholder.container():
@@ -187,6 +249,12 @@ def render_upload_page(config: Dict[str, Any]) -> None:
 
 def _estimate_page_count(file_path: str, extension: str) -> int:
     """Estimate pages for session-level UI statistics."""
+    if extension in {".pptx", ".ppt"}:
+        try:
+            metadata = extract_presentation_metadata(file_path, extension)
+            return max(1, int(metadata.get("slide_count", 1)))
+        except IngestionError:
+            return 1
     if extension != ".pdf":
         return 1
     try:
@@ -227,16 +295,12 @@ def process_uploaded_file(
 
         tmp_path = ""
         try:
-            # Step 1: Save to temp file
             progress_bar.progress(10, text="Saving file...")
-            with tempfile.NamedTemporaryFile(
-                delete=False, suffix=ext
-            ) as tmp:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
                 tmp.write(uploaded_file.getvalue())
                 tmp_path = tmp.name
             page_count = _estimate_page_count(tmp_path, ext)
 
-            # Step 2: Extract text
             _show_stepper(stepper_placeholder, active_step)
             progress_bar.progress(30, text="Extracting text...")
             raw_text = extract_text(tmp_path, ext, config)
@@ -245,19 +309,16 @@ def process_uploaded_file(
                 st.warning("Very little text extracted. File may be scanned.")
                 raw_text = raw_text or ""
 
-            # Step 3: Clean text
             active_step = 2
             _show_stepper(stepper_placeholder, active_step)
             progress_bar.progress(50, text="Cleaning text...")
             cleaned = clean_text(raw_text)
 
-            # Step 4: AI processing
             active_step = 3
             _show_stepper(stepper_placeholder, active_step)
             progress_bar.progress(70, text="AI processing (this may take a while)...")
             metadata = generate_structured_notes(cleaned, config)
 
-            # Step 5: Save to database
             active_step = 4
             _show_stepper(stepper_placeholder, active_step)
             progress_bar.progress(90, text="Saving to database...")
@@ -273,14 +334,14 @@ def process_uploaded_file(
             progress_bar.progress(100, text="Processing complete")
             st.success(f"Processed successfully in {duration:.1f}s (ID: {doc_id})")
 
-        except IngestionError as e:
+        except IngestionError as exc:
             _show_stepper(stepper_placeholder, active_step, failed=True)
             progress_bar.empty()
-            st.error(f"Ingestion error: {e}")
-        except Exception as e:
+            st.error(f"Ingestion error: {exc}")
+        except Exception as exc:
             _show_stepper(stepper_placeholder, active_step, failed=True)
             progress_bar.empty()
-            st.error(f"Error: {e}")
+            st.error(f"Error: {exc}")
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -301,21 +362,20 @@ def extract_text(file_path: str, ext: str, config: Dict[str, Any]) -> str:
                     tesseract_path=config.get("tesseract_path"),
                 )
             raise
-    elif ext == ".docx":
+    if ext == ".docx":
         return extract_text_from_docx(file_path)
-    elif ext == ".txt":
+    if ext == ".txt":
         return extract_text_from_txt(file_path)
-    elif ext in (".png", ".jpg", ".jpeg"):
+    if ext in (".pptx", ".ppt"):
+        return extract_text_from_pptx(file_path)
+    if ext in (".png", ".jpg", ".jpeg"):
         if config.get("tesseract_enabled", False):
             from src.ingestion.ocr_processor import ocr_image
+
             return ocr_image(
                 file_path,
                 lang=config.get("tesseract_lang", "eng"),
                 tesseract_path=config.get("tesseract_path"),
             )
-        else:
-            raise IngestionError(
-                "Image files require OCR. Enable OCR in Settings."
-            )
-    else:
-        raise IngestionError(f"Unsupported format: {ext}")
+        raise IngestionError("Image files require OCR. Enable OCR in Settings.")
+    raise IngestionError(f"Unsupported format: {ext}")

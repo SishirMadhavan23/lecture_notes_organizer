@@ -10,7 +10,7 @@
 
 ## Overview
 
-The **Offline AI Lecture Notes Organizer** is a Streamlit-based desktop application that transforms unstructured lecture notes (PDF, DOCX, TXT, and optionally scanned PDFs/images) into rich, structured study material. It runs **entirely on CPU** with **no cloud dependencies**, using local Small Language Models (SLMs) to extract topics, keywords, summaries, exam questions, and more.
+The **Offline AI Lecture Notes Organizer** is a Streamlit-based desktop application that transforms unstructured lecture notes (PDF, DOCX, TXT, PPTX, PPT, and optionally scanned PDFs/images) into rich, structured study material. It runs **entirely on CPU** with **no cloud dependencies**, using local Small Language Models (SLMs) to extract topics, keywords, summaries, exam questions, and more.
 
 Priorities:
 - Privacy — All processing happens on your machine
@@ -26,7 +26,7 @@ Students and professionals accumulate vast collections of lecture notes. Manuall
 
 ## Features
 
-- Multi-format Ingestion: PDF, DOCX, TXT with auto-detection
+- Multi-format Ingestion: PDF, DOCX, TXT, PPTX, and PPT with auto-detection
 - Scanned Document OCR: Tesseract OCR (optional, graceful fallback)
 - Text Normalization: Automated cleaning and structure detection
 - Local AI: Phi-3 Mini / Qwen2.5 via Ollama or llama.cpp on CPU
@@ -39,11 +39,11 @@ Students and professionals accumulate vast collections of lecture notes. Manuall
 
 ## AI Workflow
 
-Input Documents -> Text Extraction (PyMuPDF/python-docx/Tesseract) -> Text Cleaning -> Local LLM -> JSON -> SQLite -> Search
+Input Documents -> Text Extraction (PyMuPDF/python-docx/python-pptx/Tesseract) -> Text Cleaning -> Local LLM -> JSON -> SQLite -> Search
 
 ## Tech Stack
 
-Language: Python 3.11+ | UI: Streamlit | PDF: PyMuPDF | DOCX: python-docx | OCR: pytesseract | LLM: Ollama/llama.cpp | DB: SQLite+SQLAlchemy | Search: FTS5 | Tools: Ruff/Black/isort/mypy/Bandit/pytest
+Language: Python 3.11+ | UI: Streamlit | PDF: PyMuPDF | DOCX: python-docx | PPTX: python-pptx | OCR: pytesseract | LLM: Ollama/llama.cpp | DB: SQLite+SQLAlchemy | Search: FTS5 | Tools: Ruff/Black/isort/mypy/Bandit/pytest
 
 ---
 
@@ -53,6 +53,7 @@ Language: Python 3.11+ | UI: Streamlit | PDF: PyMuPDF | DOCX: python-docx | OCR:
 - Python 3.11+
 - Tesseract OCR (optional, for scanned documents)
 - Ollama (recommended, for AI features)
+- LibreOffice (optional, only for legacy `.ppt` conversion)
 
 ### Setup
 
@@ -65,6 +66,12 @@ pip install -r requirements.txt
 ollama pull phi3:mini    # Optional
 streamlit run src/app.py
 ```
+
+## Upload Support
+
+- Native support: `PDF`, `DOCX`, `TXT`, and `PPTX`
+- Legacy `PPT` support: requires LibreOffice so the app can convert `.ppt` to `.pptx` locally before extraction
+- PowerPoint extraction preserves slide order, titles, bullets, tables, and speaker notes when available
 
 ## Testing
 
@@ -88,4 +95,3 @@ See SECURITY.md.
 ---
 
 <p align="center">Built for the CPU-First Hackathon</p>
-

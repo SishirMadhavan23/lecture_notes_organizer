@@ -77,4 +77,6 @@ class TestValidators:
         assert ".pdf" in extensions
         assert ".docx" in extensions
         assert ".txt" in extensions
+        assert ".pptx" in extensions
+        assert ".ppt" in extensions
         assert len(extensions) == len(SUPPORTED_EXTENSIONS)

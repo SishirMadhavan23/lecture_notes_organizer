@@ -6,9 +6,11 @@
 - FR1.1: Accept PDF, extract text via PyMuPDF
 - FR1.2: Accept DOCX, extract text via python-docx
 - FR1.3: Accept TXT, read raw text
-- FR1.4: Support scanned PDFs via Tesseract OCR (optional)
-- FR1.5: Auto-detect file type from extension
-- FR1.6: Graceful error on corrupt files
+- FR1.4: Accept PPTX, extract slide text via python-pptx
+- FR1.5: Accept legacy PPT and convert locally when LibreOffice is available
+- FR1.6: Support scanned PDFs via Tesseract OCR (optional)
+- FR1.7: Auto-detect file type from extension
+- FR1.8: Graceful error on corrupt files
 
 ### FR2: Text Processing
 - FR2.1: Remove extra whitespace, normalize line endings
@@ -54,7 +56,7 @@
 
 ## 3. System Architecture
 
-Streamlit UI -> Orchestrator -> Ingestion -> Preprocessing -> AI Engine -> SQLite
+Streamlit UI -> Orchestrator -> Ingestion (PyMuPDF/python-docx/python-pptx/Tesseract) -> Preprocessing -> AI Engine -> SQLite
 
 ## 4. AI Pipeline
 
