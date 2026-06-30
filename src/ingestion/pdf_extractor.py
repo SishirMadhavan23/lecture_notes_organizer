@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """PDF text extraction using PyMuPDF."""
 
-from typing import Optional
-
 from src.utils.exceptions import ExtractionError
 
 
-def extract_text_from_pdf(file_path: str, page_limit: Optional[int] = None) -> str:
+def extract_text_from_pdf(file_path: str, page_limit: int | None = None) -> str:
     """Extract text from a PDF file using PyMuPDF.
 
     Args:
@@ -23,8 +21,7 @@ def extract_text_from_pdf(file_path: str, page_limit: Optional[int] = None) -> s
         import fitz
     except ImportError:
         raise ExtractionError(
-            "PyMuPDF (fitz) is not installed. "
-            "Install it with: pip install PyMuPDF"
+            "PyMuPDF (fitz) is not installed. Install it with: pip install PyMuPDF"
         )
 
     try:

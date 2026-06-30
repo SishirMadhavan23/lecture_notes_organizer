@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Tests for custom exceptions."""
 
-import pytest
-
 from src.utils.exceptions import (
     AIError,
     ConfigurationError,

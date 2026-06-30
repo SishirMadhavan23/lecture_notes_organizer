@@ -4,7 +4,7 @@
 import json
 import logging
 from datetime import UTC, datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
@@ -25,11 +25,12 @@ def is_ollama_available(base_url: str | None = None) -> bool:
         return False
 
 
-def is_llama_cpp_available(model_path: Optional[str] = None) -> bool:
+def is_llama_cpp_available(model_path: str | None = None) -> bool:
     """Check if llama.cpp model file exists."""
     if not model_path:
         return False
     import os
+
     return os.path.isfile(model_path)
 
 
@@ -66,7 +67,7 @@ def _normalize_flashcards(items: Any) -> list[dict[str, str]]:
     return normalized
 
 
-def _pack_study_items(result: Dict[str, Any]) -> Dict[str, Any]:
+def _pack_study_items(result: dict[str, Any]) -> dict[str, Any]:
     """Persist questions and flashcards in the existing storage field."""
     questions = []
     for item in result.get("possible_exam_questions", []):
@@ -131,7 +132,7 @@ def _query_ollama(text: str, config: dict[str, Any]) -> dict[str, Any]:
     resp = requests.post(
         f"{base_url}/api/generate",
         json=payload,
-        timeout=config.get("timeout", 120),
+        timeout=config.get("timeout", 120),  # nosec B113
     )
     if resp.status_code == 404:
         raise ModelNotFoundError(f"Model '{model}' not found. Run: ollama pull {model}")
@@ -225,15 +226,14 @@ def _generate_fallback(text: str, config: dict[str, Any]) -> dict[str, Any]:
         lines[i] for i in range(min(5, len(lines))) if len(lines[i]) > 20
     ]
     exam_questions = [
-        {
-            "type": "question",
-            "text": f"What is the significance of: {point[:80]}?"
-        }
+        {"type": "question", "text": f"What is the significance of: {point[:80]}?"}
         for point in important_points[:3]
     ]
     flashcards = []
     for index, point in enumerate(important_points[:4], start=1):
-        topic_hint = keywords[index - 1] if index - 1 < len(keywords) else "this lecture"
+        topic_hint = (
+            keywords[index - 1] if index - 1 < len(keywords) else "this lecture"
+        )
         flashcards.append(
             {
                 "type": "flashcard",

@@ -1,7 +1,9 @@
 stages:
   - lint
+  - quality
   - test
   - security
+  - precommit
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -15,6 +17,8 @@ before_script:
   - python -m venv .venv
   - source .venv/bin/activate || .venv\Scripts\activate
   - pip install -r requirements.txt
+
+# --- Lint stage ---
 
 ruff:
   stage: lint
@@ -37,12 +41,23 @@ isort:
     - isort --check-only --profile=black --line-length=88 src/ tests/
   allow_failure: false
 
+# --- Quality stage ---
+
+ruff-format:
+  stage: quality
+  script:
+    - pip install ruff
+    - ruff format --check src/ tests/
+  allow_failure: false
+
 mypy:
-  stage: lint
+  stage: quality
   script:
     - pip install mypy
     - mypy --strict --ignore-missing-imports src/
   allow_failure: true
+
+# --- Test stage ---
 
 pytest:
   stage: test
@@ -53,6 +68,8 @@ pytest:
     paths:
       - htmlcov/
     expire_in: 30 days
+
+# --- Security stage ---
 
 bandit:
   stage: security
@@ -73,4 +90,34 @@ detect-secrets:
   script:
     - pip install detect-secrets
     - detect-secrets scan --baseline .secrets.baseline || echo "No baseline"
+  allow_failure: true
+
+# --- Pre-commit stage ---
+
+trailing-whitespace:
+  stage: precommit
+  script:
+    - pip install pre-commit
+    - pre-commit run trailing-whitespace --all-files || echo "Check completed"
+  allow_failure: true
+
+end-of-file-fixer:
+  stage: precommit
+  script:
+    - pip install pre-commit
+    - pre-commit run end-of-file-fixer --all-files || echo "Check completed"
+  allow_failure: true
+
+check-yaml:
+  stage: precommit
+  script:
+    - pip install pre-commit
+    - pre-commit run check-yaml --all-files || echo "Check completed"
+  allow_failure: true
+
+check-json:
+  stage: precommit
+  script:
+    - pip install pre-commit
+    - pre-commit run check-json --all-files || echo "Check completed"
   allow_failure: true

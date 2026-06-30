@@ -2,7 +2,6 @@
 """Input validation utilities."""
 
 from pathlib import Path
-from typing import List
 
 from src.utils.exceptions import UnsupportedFormatError
 
@@ -33,6 +32,6 @@ def validate_file_size(file_path: Path) -> None:
         )
 
 
-def get_supported_extensions() -> List[str]:
+def get_supported_extensions() -> list[str]:
     """Return list of supported file extensions."""
     return list(SUPPORTED_EXTENSIONS)

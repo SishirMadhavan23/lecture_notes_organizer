@@ -20,14 +20,11 @@ def extract_text_from_docx(file_path: str) -> str:
         from docx import Document
     except ImportError:
         raise ExtractionError(
-            "python-docx is not installed. "
-            "Install it with: pip install python-docx"
+            "python-docx is not installed. Install it with: pip install python-docx"
         )
     try:
         doc = Document(file_path)
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
         return "\n\n".join(paragraphs)
     except Exception as exc:
-        raise ExtractionError(
-            f"Failed to extract text from DOCX: {exc}"
-        ) from exc
+        raise ExtractionError(f"Failed to extract text from DOCX: {exc}") from exc

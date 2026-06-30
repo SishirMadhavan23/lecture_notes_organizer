@@ -16,9 +16,15 @@ class TestPromptTemplates:
     def test_user_prompt_contains_required_fields(self):
         """Test that user prompt template includes all required fields."""
         fields = [
-            "title", "subject", "topics", "keywords",
-            "summary", "important_points",
-            "possible_exam_questions", "difficulty", "created_at"
+            "title",
+            "subject",
+            "topics",
+            "keywords",
+            "summary",
+            "important_points",
+            "possible_exam_questions",
+            "difficulty",
+            "created_at",
         ]
         for field in fields:
             assert field in USER_PROMPT_TEMPLATE, f"Missing field: {field}"

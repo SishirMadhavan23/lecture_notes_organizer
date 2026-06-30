@@ -7,7 +7,7 @@ import platform
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -16,7 +16,9 @@ from src.utils.config import get_default_tesseract_path
 logger = logging.getLogger(__name__)
 
 
-def _run_command(command: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
+def _run_command(
+    command: list[str], timeout: int = 5
+) -> subprocess.CompletedProcess[str]:
     """Run a subprocess command and capture its output."""
     return subprocess.run(
         command,
@@ -65,7 +67,7 @@ def get_common_tesseract_paths() -> list[str]:
     return unique_paths
 
 
-def detect_tesseract_path() -> Optional[str]:
+def detect_tesseract_path() -> str | None:
     """Detect an installed Tesseract executable."""
     for candidate in get_common_tesseract_paths():
         candidate_path = Path(candidate)
@@ -109,7 +111,7 @@ def test_tesseract_connection(executable_path: str) -> dict[str, Any]:
     }
 
 
-def detect_ollama_host(host: str = "http://localhost:11434") -> Optional[str]:
+def detect_ollama_host(host: str = "http://localhost:11434") -> str | None:
     """Detect whether an Ollama server is available at the supplied host."""
     try:
         response = requests.get(f"{host.rstrip('/')}/api/tags", timeout=3)

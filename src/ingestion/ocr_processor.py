@@ -2,13 +2,12 @@
 """OCR processing for scanned documents."""
 
 import shutil
-from typing import Optional
 
-from src.utils.exceptions import OCRError
 from src.utils.config import load_config
+from src.utils.exceptions import OCRError
 
 
-def _resolve_tesseract_path(tesseract_path: Optional[str] = None) -> Optional[str]:
+def _resolve_tesseract_path(tesseract_path: str | None = None) -> str | None:
     """Resolve the configured Tesseract executable path."""
     if tesseract_path:
         return tesseract_path
@@ -18,7 +17,7 @@ def _resolve_tesseract_path(tesseract_path: Optional[str] = None) -> Optional[st
     return shutil.which("tesseract")
 
 
-def is_tesseract_available(tesseract_path: Optional[str] = None) -> bool:
+def is_tesseract_available(tesseract_path: str | None = None) -> bool:
     """Check if Tesseract OCR is installed."""
     resolved_path = _resolve_tesseract_path(tesseract_path)
     if tesseract_path:
@@ -31,7 +30,7 @@ def is_tesseract_available(tesseract_path: Optional[str] = None) -> bool:
 def ocr_image(
     image_path: str,
     lang: str = "eng",
-    tesseract_path: Optional[str] = None,
+    tesseract_path: str | None = None,
 ) -> str:
     """Perform OCR on an image file.
 
@@ -43,8 +42,7 @@ def ocr_image(
         from PIL import Image
     except ImportError:
         raise OCRError(
-            "pytesseract/Pillow not installed. "
-            "Install: pip install pytesseract Pillow"
+            "pytesseract/Pillow not installed. Install: pip install pytesseract Pillow"
         )
     resolved_path = _resolve_tesseract_path(tesseract_path)
     if resolved_path:
@@ -62,7 +60,7 @@ def ocr_pdf(
     pdf_path: str,
     lang: str = "eng",
     dpi: int = 300,
-    tesseract_path: Optional[str] = None,
+    tesseract_path: str | None = None,
 ) -> str:
     """Perform OCR on a scanned PDF.
 
@@ -84,8 +82,7 @@ def ocr_pdf(
         raise OCRError("Tesseract OCR engine not found on system.")
     try:
         images = convert_from_path(pdf_path, dpi=dpi)
-        texts = [pytesseract.image_to_string(img, lang=lang).strip()
-                 for img in images]
+        texts = [pytesseract.image_to_string(img, lang=lang).strip() for img in images]
         return "\n\n".join(texts)
     except Exception as exc:
         raise OCRError(f"PDF OCR failed: {exc}") from exc

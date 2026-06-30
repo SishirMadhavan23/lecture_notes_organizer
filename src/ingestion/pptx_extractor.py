@@ -8,14 +8,15 @@ import os
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, BinaryIO, Iterator, Union
+from typing import Any, BinaryIO
 
 from src.utils.exceptions import ExtractionError
 
-PresentationSource = Union[str, Path, bytes, bytearray, BinaryIO]
+PresentationSource = str | Path | bytes | bytearray | BinaryIO
 
 
 def _find_office_converter() -> str | None:
@@ -26,7 +27,8 @@ def _find_office_converter() -> str | None:
 
     if os.name == "nt":
         candidates = (
-            Path(os.environ.get("PROGRAMFILES", "")) / "LibreOffice/program/soffice.exe",
+            Path(os.environ.get("PROGRAMFILES", ""))
+            / "LibreOffice/program/soffice.exe",
             Path(os.environ.get("PROGRAMFILES(X86)", ""))
             / "LibreOffice/program/soffice.exe",
         )

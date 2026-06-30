@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Dict
-
 import streamlit as st
 
-THEME: Dict[str, str] = {
+THEME: dict[str, str] = {
     "primary": "#14B8A6",
     "primary_hover": "#0F9E90",
     "primary_deep": "#0B6E69",

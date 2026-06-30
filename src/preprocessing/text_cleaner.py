@@ -3,7 +3,6 @@
 
 import re
 from pathlib import Path
-from typing import List, Optional
 
 
 def clean_text(
@@ -21,6 +20,7 @@ def clean_text(
     if normalize_unicode:
         try:
             import unidecode
+
             result = unidecode.unidecode(result)
         except ImportError:
             pass
@@ -33,14 +33,14 @@ def clean_text(
     return result.strip()
 
 
-def extract_title(text: str, filename: Optional[str] = None) -> str:
+def extract_title(text: str, filename: str | None = None) -> str:
     """Extract title from text or filename."""
     if not text:
         return _title_from_filename(filename) if filename else "Untitled"
     heading = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
     if heading:
         return heading.group(1).strip()
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
     if lines and len(lines[0]) < 200:
         return lines[0]
     if filename:
@@ -56,7 +56,7 @@ def _title_from_filename(filename: str) -> str:
 
 def split_into_chunks(
     text: str, max_chars: int = 2000, overlap: int = 100
-) -> List[str]:
+) -> list[str]:
     """Split text into overlapping chunks for LLM processing."""
     if not text:
         return []

@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Search page for Streamlit UI with FTS5 full-text search."""
 
-from typing import Any, Dict
+from typing import Any
 
 import streamlit as st
 
 from src.storage.database import search_notes
-from src.ui.components.page_header import render_page_header
 from src.ui.components.note_card import render_note_card
+from src.ui.components.page_header import render_page_header
 
 
-def render_search(config: Dict[str, Any]) -> None:
+def render_search(config: dict[str, Any]) -> None:
     """Render the search page."""
     render_page_header(
         "Search Organized Notes",

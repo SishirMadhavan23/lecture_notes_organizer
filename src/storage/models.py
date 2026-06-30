@@ -2,8 +2,8 @@
 """SQLAlchemy ORM models for SQLite database."""
 
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, create_engine
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
@@ -22,14 +22,16 @@ class Document(Base):
     file_size = Column(Integer, nullable=False)
     raw_text = Column(Text, nullable=True)
     cleaned_text = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     processed_at = Column(DateTime, nullable=True)
     status = Column(Text, default="pending")
     error_message = Column(Text, nullable=True)
 
     metadata_rel = relationship(
-        "NoteMetadata", back_populates="document",
-        uselist=False, cascade="all, delete-orphan"
+        "NoteMetadata",
+        back_populates="document",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     def __init__(self, **kwargs: Any) -> None:
@@ -38,7 +40,7 @@ class Document(Base):
         if self.status is None:
             self.status = "pending"
         if self.created_at is None:
-            self.created_at = datetime.now(timezone.utc)
+            self.created_at = datetime.now(UTC)
 
 
 class NoteMetadata(Base):
@@ -59,7 +61,7 @@ class NoteMetadata(Base):
 
     document = relationship("Document", back_populates="metadata_rel")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metadata to dictionary matching output schema."""
         return {
             "title": self.title or "",
@@ -72,12 +74,14 @@ class NoteMetadata(Base):
             ),
             "possible_exam_questions": (
                 json.loads(self.possible_exam_questions)
-                if self.possible_exam_questions else []
+                if self.possible_exam_questions
+                else []
             ),
             "difficulty": self.difficulty or "",
             "created_at": (
                 self.document.created_at.isoformat()
-                if self.document and self.document.created_at else ""
+                if self.document and self.document.created_at
+                else ""
             ),
         }
 
@@ -91,5 +95,5 @@ def init_db(database_url: str = "sqlite:///data/lecture_notes.db") -> Any:
 
 def get_session(engine: Any):
     """Create a new database session."""
-    Session = sessionmaker(bind=engine)
-    return Session()
+    session_factory = sessionmaker(bind=engine)
+    return session_factory()

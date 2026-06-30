@@ -2,8 +2,9 @@
 """Note card display component."""
 
 import re
+from collections.abc import Iterable
 from html import escape
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any
 
 import streamlit as st
 
@@ -26,17 +27,17 @@ def _format_file_size(size_bytes: int) -> str:
     return f"{size_bytes / 1024 / 1024:.2f} MB"
 
 
-def _is_presentation(note: Dict[str, Any]) -> bool:
+def _is_presentation(note: dict[str, Any]) -> bool:
     """Return whether the note originated from a PowerPoint upload."""
     return str(note.get("file_type", "")).lower() in {"pptx", "ppt"}
 
 
 def _normalize_study_items(
     items: Iterable[Any],
-) -> Tuple[List[str], List[Dict[str, str]]]:
+) -> tuple[list[str], list[dict[str, str]]]:
     """Split stored study items into exam questions and flashcards."""
-    questions: List[str] = []
-    flashcards: List[Dict[str, str]] = []
+    questions: list[str] = []
+    flashcards: list[dict[str, str]] = []
 
     for item in items or []:
         if isinstance(item, dict):
@@ -60,7 +61,7 @@ def _normalize_study_items(
     return questions, flashcards
 
 
-def _parse_presentation_details(raw_text: str) -> Dict[str, Any]:
+def _parse_presentation_details(raw_text: str) -> dict[str, Any]:
     """Parse presentation metadata and slide sections from stored raw text."""
     metadata = {
         "title": "",
@@ -78,12 +79,11 @@ def _parse_presentation_details(raw_text: str) -> Dict[str, Any]:
     created_match = re.search(r"^Created:\s*(.*)$", raw_text, re.MULTILINE)
     slide_count_match = re.search(r"^Slides:\s*(\d+)$", raw_text, re.MULTILINE)
 
-    metadata["title"] = (title_match.group(1).strip() if title_match else "")
-    metadata["author"] = (author_match.group(1).strip() if author_match else "")
-    metadata["created"] = (created_match.group(1).strip() if created_match else "")
+    metadata["title"] = title_match.group(1).strip() if title_match else ""
+    metadata["author"] = author_match.group(1).strip() if author_match else ""
+    metadata["created"] = created_match.group(1).strip() if created_match else ""
     metadata["slide_count"] = (
-        int(slide_count_match.group(1))
-        if slide_count_match else 0
+        int(slide_count_match.group(1)) if slide_count_match else 0
     )
 
     slide_pattern = re.compile(
@@ -100,16 +100,18 @@ def _parse_presentation_details(raw_text: str) -> Dict[str, Any]:
     return metadata
 
 
-def _render_general_tab(note: Dict[str, Any]) -> None:
+def _render_general_tab(note: dict[str, Any]) -> None:
     """Render general note metadata."""
     st.markdown(f"**Filename:** `{note.get('filename', 'N/A')}`")
     st.markdown(f"**File type:** `{str(note.get('file_type', 'N/A')).upper()}`")
-    st.markdown(f"**File size:** {_format_file_size(int(note.get('file_size', 0) or 0))}")
+    st.markdown(
+        f"**File size:** {_format_file_size(int(note.get('file_size', 0) or 0))}"
+    )
     st.markdown(f"**Upload time:** `{note.get('created_at', 'N/A')}`")
     st.markdown(f"**Subject:** `{note.get('subject') or 'General'}`")
 
 
-def _render_intermediate_tab(note: Dict[str, Any]) -> None:
+def _render_intermediate_tab(note: dict[str, Any]) -> None:
     """Render AI-generated summary information."""
     topics = note.get("topics", [])
     keywords = note.get("keywords", [])
@@ -140,7 +142,7 @@ def _render_intermediate_tab(note: Dict[str, Any]) -> None:
         st.caption("No important points available.")
 
 
-def _render_presentation_metadata_tab(note: Dict[str, Any]) -> None:
+def _render_presentation_metadata_tab(note: dict[str, Any]) -> None:
     """Render PowerPoint-specific metadata."""
     presentation = _parse_presentation_details(note.get("raw_text", ""))
     st.markdown(
@@ -168,7 +170,7 @@ def _render_presentation_metadata_tab(note: Dict[str, Any]) -> None:
     )
 
 
-def _render_content_tabs(note: Dict[str, Any]) -> None:
+def _render_content_tabs(note: dict[str, Any]) -> None:
     """Render the document detail tabs."""
     questions, flashcards = _normalize_study_items(
         note.get("possible_exam_questions", [])
@@ -183,7 +185,9 @@ def _render_content_tabs(note: Dict[str, Any]) -> None:
     tab_map = dict(zip(labels, tabs))
 
     with tab_map["Overview"]:
-        st.markdown(f"**Title:** {note.get('title') or note.get('filename', 'Untitled')}")
+        st.markdown(
+            f"**Title:** {note.get('title') or note.get('filename', 'Untitled')}"
+        )
         st.markdown(f"**Subject:** {note.get('subject') or 'General'}")
         st.markdown(f"**Difficulty:** {note.get('difficulty') or 'Intermediate'}")
         st.markdown(f"**Processed:** `{note.get('created_at', 'N/A')}`")
@@ -249,7 +253,7 @@ def _render_content_tabs(note: Dict[str, Any]) -> None:
             st.caption("No exam questions available.")
 
 
-def render_note_card(note: Dict[str, Any], expanded: bool = False) -> None:
+def render_note_card(note: dict[str, Any], expanded: bool = False) -> None:
     """Render a single note card with expandable details.
 
     Args:
@@ -290,7 +294,7 @@ def render_note_card(note: Dict[str, Any], expanded: bool = False) -> None:
             <h3 class="page-title" style="font-size: 1.25rem; margin-bottom: 0.2rem;">
                 {escape(title)}
             </h3>
-            <div class="meta-row">{''.join(meta_items)}</div>
+            <div class="meta-row">{"".join(meta_items)}</div>
             <p class="note-summary">{escape(summary_text) if summary_text else "No summary available yet."}</p>
             """,
             unsafe_allow_html=True,

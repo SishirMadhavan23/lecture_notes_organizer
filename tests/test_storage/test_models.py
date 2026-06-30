@@ -2,9 +2,7 @@
 """Tests for database models."""
 
 import json
-from datetime import datetime, timezone
-
-import pytest
+from datetime import UTC, datetime
 
 from src.storage.models import Document, NoteMetadata
 
@@ -19,7 +17,7 @@ class TestDocumentModel:
 
     def test_document_with_fields(self):
         """Test document creation with fields."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         doc = Document(
             filename="test.pdf",
             file_type="pdf",

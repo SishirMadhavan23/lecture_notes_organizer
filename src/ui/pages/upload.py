@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from html import escape
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import streamlit as st
 
@@ -16,8 +16,8 @@ from src.ingestion.docx_extractor import extract_text_from_docx
 from src.ingestion.ocr_processor import is_tesseract_available, ocr_pdf
 from src.ingestion.pdf_extractor import extract_text_from_pdf
 from src.ingestion.pptx_extractor import (
-    extract_text_from_pptx,
     extract_presentation_metadata,
+    extract_text_from_pptx,
 )
 from src.ingestion.txt_extractor import extract_text_from_txt
 from src.preprocessing.text_cleaner import clean_text
@@ -47,7 +47,7 @@ def _get_supported_extensions() -> list[str]:
     return [ext for ext in ordered if ext in known]
 
 
-def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> Optional[str]:
+def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> str | None:
     """Validate a Streamlit uploaded file before processing."""
     if uploaded_file is None:
         return None
@@ -56,16 +56,13 @@ def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> Optional[st
     supported_extensions = set(_get_supported_extensions())
     if extension not in supported_extensions:
         return (
-            "Unsupported file type. Please upload a PDF, DOCX, TXT, PPTX, "
-            "or PPT file."
+            "Unsupported file type. Please upload a PDF, DOCX, TXT, PPTX, or PPT file."
         )
 
     file_size_bytes = len(uploaded_file.getvalue())
     max_size_bytes = min(max_file_size_mb * 1024 * 1024, MAX_FILE_SIZE_BYTES)
     if file_size_bytes > max_size_bytes:
-        return (
-            f"File is too large. Please upload a file under {max_file_size_mb} MB."
-        )
+        return f"File is too large. Please upload a file under {max_file_size_mb} MB."
 
     return None
 
@@ -115,15 +112,12 @@ def _render_upload_preview(
         ("Status", "Validated and queued"),
     ]
 
-    preview_grid = "".join(
-        f"""
+    preview_grid = "".join(f"""
         <div>
             <div class="upload-preview-label">{escape(label)}</div>
             <div class="upload-preview-value">{value}</div>
         </div>
-        """
-        for label, value in preview_items
-    )
+        """ for label, value in preview_items)
 
     st.markdown(
         f"""
@@ -146,7 +140,7 @@ def _render_upload_preview(
     )
 
 
-def render_upload_page(config: Dict[str, Any]) -> None:
+def render_upload_page(config: dict[str, Any]) -> None:
     """Render the upload page."""
     render_page_header(
         "Upload Source Material",
@@ -228,7 +222,7 @@ def _show_stepper(placeholder: Any, active_step: int, failed: bool = False) -> N
 
 def process_uploaded_file(
     uploaded_file: Any,
-    config: Dict[str, Any],
+    config: dict[str, Any],
     stepper_placeholder: Any,
 ) -> None:
     """Process a single uploaded file through the pipeline."""
@@ -301,7 +295,7 @@ def process_uploaded_file(
                 os.unlink(tmp_path)
 
 
-def extract_text(file_path: str, ext: str, config: Dict[str, Any]) -> str:
+def extract_text(file_path: str, ext: str, config: dict[str, Any]) -> str:
     """Extract text based on file extension."""
     if ext == ".pdf":
         try:

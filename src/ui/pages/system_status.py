@@ -135,7 +135,7 @@ def render_system_status(config: dict[str, Any]) -> None:
             f'<div class="status-list-row"><span>{escape(pkg)}</span>'
             f'<span class="status-badge '
             f'status-badge--{"success" if installed else "error"}">'
-            f'{"Configured" if installed else "Not installed"}</span></div>'
+            f"{'Configured' if installed else 'Not installed'}</span></div>"
             for pkg, installed in package_status.items()
         )
         st.markdown(f'<div class="status-list">{rows}</div>', unsafe_allow_html=True)

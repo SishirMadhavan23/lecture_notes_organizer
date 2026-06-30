@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from html import escape
-from typing import Iterable, Mapping
 from urllib.parse import quote
 
 import streamlit as st
@@ -39,17 +39,16 @@ def render_status_card(
 
 def render_stat_cards(stats: Iterable[Mapping[str, str]]) -> None:
     """Render a responsive row of processing statistics."""
-    cards = "".join(
-        f"""
+    cards = "".join(f"""
         <article class="stat-card">
-            <div class="stat-card__label">{escape(item['label'])}</div>
-            <div class="stat-card__value">{escape(item['value'])}</div>
-            <div class="stat-card__hint">{escape(item.get('hint', ''))}</div>
+            <div class="stat-card__label">{escape(item["label"])}</div>
+            <div class="stat-card__value">{escape(item["value"])}</div>
+            <div class="stat-card__hint">{escape(item.get("hint", ""))}</div>
         </article>
-        """
-        for item in stats
+        """ for item in stats)
+    st.markdown(
+        f'<section class="stats-grid">{cards}</section>', unsafe_allow_html=True
     )
-    st.markdown(f'<section class="stats-grid">{cards}</section>', unsafe_allow_html=True)
 
 
 def render_processing_stepper(active_step: int = 0, failed: bool = False) -> None:
@@ -70,9 +69,10 @@ def render_processing_stepper(active_step: int = 0, failed: bool = False) -> Non
             state = "active"
         else:
             state = "pending"
-        marker = "!" if state == "error" else ("OK" if state == "complete" else str(index))
-        markup.append(
-            f"""
+        marker = (
+            "!" if state == "error" else ("OK" if state == "complete" else str(index))
+        )
+        markup.append(f"""
             <div class="process-step process-step--{state}">
                 <span class="process-step__marker">{marker}</span>
                 <span class="process-step__copy">
@@ -80,8 +80,7 @@ def render_processing_stepper(active_step: int = 0, failed: bool = False) -> Non
                     <small>{escape(subtitle)}</small>
                 </span>
             </div>
-            """
-        )
+            """)
     st.markdown(
         f'<section class="process-stepper" aria-label="Processing progress">{"".join(markup)}</section>',
         unsafe_allow_html=True,

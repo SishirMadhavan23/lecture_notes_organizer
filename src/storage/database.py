@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any
 
 from sqlalchemy import Engine, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -18,11 +19,11 @@ from src.utils.exceptions import StorageError
 
 logger = logging.getLogger(__name__)
 
-_engine: Optional[Engine] = None
+_engine: Engine | None = None
 _fts_ready = False
 
 
-def _resolve_database_url(database_url: Optional[str] = None) -> str:
+def _resolve_database_url(database_url: str | None = None) -> str:
     """Resolve a deployment-safe database URL."""
     config = load_config()
     raw_url = database_url or config.database_url
@@ -93,7 +94,7 @@ def _document_file_size(source_name: str, raw_text: str) -> int:
     return len(raw_text.encode("utf-8"))
 
 
-def _build_note_dict(document: Document) -> Dict[str, Any]:
+def _build_note_dict(document: Document) -> dict[str, Any]:
     metadata = document.metadata_rel.to_dict() if document.metadata_rel else {}
     return {
         "id": document.id,
@@ -123,7 +124,7 @@ def _sync_fts_row(
     document_id: int,
     filename: str,
     cleaned_text: str,
-    metadata: Dict[str, Any],
+    metadata: dict[str, Any],
 ) -> None:
     if not _fts_ready:
         return
@@ -139,13 +140,13 @@ def _sync_fts_row(
         )
         connection.execute(
             text(
-                """
-                INSERT INTO fts_notes (
-                    document_id, filename, title, subject, topics, keywords, summary, content
-                ) VALUES (
-                    :document_id, :filename, :title, :subject, :topics, :keywords, :summary, :content
-                )
-                """
+                "INSERT INTO fts_notes ("
+                "document_id, filename, title, subject, "
+                "topics, keywords, summary, content"
+                ") VALUES ("
+                ":document_id, :filename, :title, :subject, "
+                ":topics, :keywords, :summary, :content"
+                ")"
             ),
             {
                 "document_id": document_id,
@@ -164,7 +165,7 @@ def save_document(
     source_name: str,
     raw_text: str,
     cleaned_text: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
 ) -> int:
     """Persist a processed document and its extracted metadata."""
     engine = get_engine()
@@ -180,7 +181,7 @@ def save_document(
             file_size=_document_file_size(source_name, raw_text),
             raw_text=raw_text,
             cleaned_text=cleaned_text,
-            processed_at=datetime.now(timezone.utc),
+            processed_at=datetime.now(UTC),
             status="processed",
         )
         session.add(document)
@@ -194,9 +195,7 @@ def save_document(
                 topics=_serialize_list(note_metadata.get("topics")),
                 keywords=_serialize_list(note_metadata.get("keywords")),
                 summary=note_metadata.get("summary", ""),
-                important_points=_serialize_list(
-                    note_metadata.get("important_points")
-                ),
+                important_points=_serialize_list(note_metadata.get("important_points")),
                 possible_exam_questions=_serialize_list(
                     note_metadata.get("possible_exam_questions")
                 ),
@@ -214,7 +213,7 @@ def save_document(
         session.close()
 
 
-def get_all_documents() -> List[Dict[str, Any]]:
+def get_all_documents() -> list[dict[str, Any]]:
     """Return all processed documents with their metadata."""
     engine = get_engine()
     session = get_session(engine)
@@ -232,19 +231,17 @@ def get_all_documents() -> List[Dict[str, Any]]:
         session.close()
 
 
-def _fts_search(query: str) -> List[Dict[str, Any]]:
+def _fts_search(query: str) -> list[dict[str, Any]]:
     engine = get_engine()
     session = get_session(engine)
     try:
-        stmt = text(
-            """
+        stmt = text("""
             SELECT d.id
             FROM fts_notes f
             JOIN documents d ON d.id = f.document_id
             WHERE fts_notes MATCH :query
             ORDER BY bm25(fts_notes), d.created_at DESC
-            """
-        )
+            """)
         ids = [row[0] for row in session.execute(stmt, {"query": query}).all()]
         if not ids:
             return []
@@ -269,7 +266,7 @@ def _fts_search(query: str) -> List[Dict[str, Any]]:
         session.close()
 
 
-def _fallback_search(query: str) -> List[Dict[str, Any]]:
+def _fallback_search(query: str) -> list[dict[str, Any]]:
     engine = get_engine()
     session = get_session(engine)
     pattern = f"%{query}%"
@@ -295,7 +292,7 @@ def _fallback_search(query: str) -> List[Dict[str, Any]]:
         session.close()
 
 
-def search_notes(query: str) -> List[Dict[str, Any]]:
+def search_notes(query: str) -> list[dict[str, Any]]:
     """Search across stored notes, preferring FTS5 when available."""
     cleaned_query = query.strip()
     if not cleaned_query:
@@ -339,7 +336,7 @@ def delete_document(document_id: int) -> bool:
         session.close()
 
 
-def get_stats() -> Dict[str, Any]:
+def get_stats() -> dict[str, Any]:
     """Return basic database statistics for the status dashboard."""
     engine = get_engine()
     session = get_session(engine)

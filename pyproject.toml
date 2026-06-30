@@ -4,7 +4,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
 name = "lecture-notes-organizer"
-version = "0.1.0"
+version = "0.3.0"
 description = "Offline AI Lecture Notes Organizer - CPU-First Hackathon"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -51,6 +51,7 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

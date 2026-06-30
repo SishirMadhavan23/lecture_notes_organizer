@@ -16,8 +16,9 @@ class TestTxtExtractor:
     def test_extract_utf8_text(self):
         """Test extraction of UTF-8 encoded text file."""
         content = "Hello, World!\nThis is a test file."
-        with tempfile.NamedTemporaryFile(suffix=".txt", mode="w",
-                                          encoding="utf-8", delete=False) as f:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", mode="w", encoding="utf-8", delete=False
+        ) as f:
             f.write(content)
             path = f.name
 
@@ -30,8 +31,9 @@ class TestTxtExtractor:
     def test_extract_with_encoding(self):
         """Test extraction with explicit encoding."""
         content = "Café résumé naïve"
-        with tempfile.NamedTemporaryFile(suffix=".txt", mode="w",
-                                          encoding="latin-1", delete=False) as f:
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", mode="w", encoding="latin-1", delete=False
+        ) as f:
             f.write(content)
             path = f.name
 
