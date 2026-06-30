@@ -51,7 +51,8 @@ def ocr_image(
         raise OCRError("Tesseract OCR engine not found on system.")
     try:
         image = Image.open(image_path)
-        return pytesseract.image_to_string(image, lang=lang).strip()
+        text: str = pytesseract.image_to_string(image, lang=lang).strip()
+        return text
     except Exception as exc:
         raise OCRError(f"OCR processing failed: {exc}") from exc
 
@@ -82,7 +83,10 @@ def ocr_pdf(
         raise OCRError("Tesseract OCR engine not found on system.")
     try:
         images = convert_from_path(pdf_path, dpi=dpi)
-        texts = [pytesseract.image_to_string(img, lang=lang).strip() for img in images]
+        texts: list[str] = [
+    str(pytesseract.image_to_string(img, lang=lang).strip())
+    for img in images
+]
         return "\n\n".join(texts)
     except Exception as exc:
         raise OCRError(f"PDF OCR failed: {exc}") from exc

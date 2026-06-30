@@ -47,7 +47,10 @@ def _get_supported_extensions() -> list[str]:
     return [ext for ext in ordered if ext in known]
 
 
-def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> str | None:
+def _validate_uploaded_file(
+    uploaded_file: Any,
+    max_file_size_mb: int,
+) -> str | None:
     """Validate a Streamlit uploaded file before processing."""
     if uploaded_file is None:
         return None
@@ -67,7 +70,7 @@ def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> str | None:
     return None
 
 
-def _get_upload_timestamp(uploaded_file) -> str:
+def _get_upload_timestamp(uploaded_file: Any) -> str:
     """Track the timestamp for the currently selected upload."""
     signature = f"{uploaded_file.name}:{uploaded_file.size}"
     current_signature = st.session_state.get("upload_signature")
@@ -76,7 +79,7 @@ def _get_upload_timestamp(uploaded_file) -> str:
         st.session_state[UPLOAD_TIMESTAMP_KEY] = datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-    return st.session_state.get(UPLOAD_TIMESTAMP_KEY, "")
+    return str(st.session_state.get(UPLOAD_TIMESTAMP_KEY, ""))
 
 
 def _render_upload_dropzone() -> None:
@@ -99,7 +102,7 @@ def _render_upload_dropzone() -> None:
 
 
 def _render_upload_preview(
-    uploaded_file,
+    uploaded_file: Any,
     timestamp: str,
 ) -> None:
     """Render the selected file preview panel."""
@@ -302,31 +305,41 @@ def extract_text(file_path: str, ext: str, config: dict[str, Any]) -> str:
     """Extract text based on file extension."""
     if ext == ".pdf":
         try:
-            return extract_text_from_pdf(file_path)
+            return str(extract_text_from_pdf(file_path))
         except Exception:
             if config.get("tesseract_enabled", False) and is_tesseract_available(
                 config.get("tesseract_path")
             ):
-                return ocr_pdf(
-                    file_path,
-                    lang=config.get("tesseract_lang", "eng"),
-                    tesseract_path=config.get("tesseract_path"),
+                return str(
+                    ocr_pdf(
+                        file_path,
+                        lang=config.get("tesseract_lang", "eng"),
+                        tesseract_path=config.get("tesseract_path"),
+                    )
                 )
             raise
+
     if ext == ".docx":
-        return extract_text_from_docx(file_path)
+        return str(extract_text_from_docx(file_path))
+
     if ext == ".txt":
-        return extract_text_from_txt(file_path)
+        return str(extract_text_from_txt(file_path))
+
     if ext in (".pptx", ".ppt"):
-        return extract_text_from_pptx(file_path)
+        return str(extract_text_from_pptx(file_path))
+
     if ext in (".png", ".jpg", ".jpeg"):
         if config.get("tesseract_enabled", False):
             from src.ingestion.ocr_processor import ocr_image
 
-            return ocr_image(
-                file_path,
-                lang=config.get("tesseract_lang", "eng"),
-                tesseract_path=config.get("tesseract_path"),
+            return str(
+                ocr_image(
+                    file_path,
+                    lang=config.get("tesseract_lang", "eng"),
+                    tesseract_path=config.get("tesseract_path"),
+                )
             )
+
         raise IngestionError("Image files require OCR. Enable OCR in Settings.")
+
     raise IngestionError(f"Unsupported format: {ext}")

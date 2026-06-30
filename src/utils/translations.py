@@ -36,9 +36,16 @@ def _load_translation_file(lang: str) -> dict[str, str]:
     if not path.exists():
         logger.warning("Translation file not found: %s", path)
         return {}
+
     try:
         with open(path, encoding="utf-8") as f:
-            return json.load(f)
+            data: Any = json.load(f)
+
+        if isinstance(data, dict):
+            return {str(k): str(v) for k, v in data.items()}
+
+        return {}
+
     except (json.JSONDecodeError, OSError) as exc:
         logger.error("Failed to load translation %s: %s", path, exc)
         return {}
@@ -55,7 +62,7 @@ def _load_all_translations() -> dict[str, dict[str, str]]:
 def get_language() -> str:
     """Return the currently selected language code from session state."""
     _load_all_translations()
-    lang = st.session_state.get("language", DEFAULT_LANGUAGE)
+    lang = str(st.session_state.get("language", DEFAULT_LANGUAGE))
     if lang not in LANGUAGES:
         lang = DEFAULT_LANGUAGE
     return lang
@@ -119,7 +126,7 @@ def t(key: str, default: str | None = None, **kwargs: Any) -> str:
                     return value
             return value
 
-    return default or key
+    return str(default or key)
 
 
 def has_translation(key: str) -> bool:

@@ -36,8 +36,9 @@ def extract_text_from_pdf(file_path: str, page_limit: int | None = None) -> str:
     except Exception as exc:
         raise ExtractionError(f"Failed to extract text from PDF: {exc}") from exc
 
+from typing import Any
 
-def extract_metadata(file_path: str) -> dict:
+def extract_metadata(file_path: str) -> dict[str, Any]:
     """Extract PDF metadata (title, author, etc.)."""
     try:
         import fitz

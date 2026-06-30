@@ -30,7 +30,9 @@ class AppConfig:
     tesseract_lang: str = "eng"
     tesseract_timeout: int = 60
     max_file_size_mb: int = 50
-    supported_formats: list = field(default_factory=lambda: ["pdf", "docx", "txt"])
+    supported_formats: list[str] = field(
+    default_factory=lambda: ["pdf", "docx", "txt"]
+)
     cache_enabled: bool = True
     page_title: str = "Lecture Notes Organizer"
     config_filename: str = "app_config.json"
@@ -85,7 +87,8 @@ def _load_config_file(config_path: Path) -> dict[str, Any]:
     if not config_path.exists():
         return {}
     try:
-        return json.loads(config_path.read_text(encoding="utf-8"))
+        data: Any = json.loads(config_path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError):
         return {}
 

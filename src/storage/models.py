@@ -4,6 +4,7 @@
 import json
 from datetime import UTC, datetime
 from typing import Any
+from sqlalchemy.orm import Session
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
@@ -99,7 +100,7 @@ def init_db(database_url: str = "sqlite:///data/lecture_notes.db") -> Any:
     return engine
 
 
-def get_session(engine: Any):
+def get_session(engine: Any) -> Session:
     """Create a new database session."""
     session_factory = sessionmaker(bind=engine)
     return session_factory()
