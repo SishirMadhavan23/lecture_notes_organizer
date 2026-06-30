@@ -42,7 +42,7 @@ def _load_translation_file(lang: str) -> dict[str, str]:
             data: Any = json.load(f)
 
         if isinstance(data, dict):
-            return {str(k): str(v) for k, v in data.items()}
+            return data
 
         return {}
 

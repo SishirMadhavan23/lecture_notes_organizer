@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """PDF text extraction using PyMuPDF."""
 
+from typing import Any
+
 from src.utils.exceptions import ExtractionError
 
 
@@ -35,9 +37,6 @@ def extract_text_from_pdf(file_path: str, page_limit: int | None = None) -> str:
         return "\n\n".join(text_parts)
     except Exception as exc:
         raise ExtractionError(f"Failed to extract text from PDF: {exc}") from exc
-
-
-from typing import Any
 
 
 def extract_metadata(file_path: str) -> dict[str, Any]:

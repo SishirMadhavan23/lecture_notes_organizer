@@ -4,10 +4,9 @@
 import json
 from datetime import UTC, datetime
 from typing import Any
-from sqlalchemy.orm import Session
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, create_engine
-from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
 
 class Base(DeclarativeBase):
