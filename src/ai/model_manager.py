@@ -33,6 +33,53 @@ def is_llama_cpp_available(model_path: Optional[str] = None) -> bool:
     return os.path.isfile(model_path)
 
 
+def _normalize_question_text(item: Any) -> str:
+    """Return a plain-text question from varied model output formats."""
+    if isinstance(item, dict):
+        return str(item.get("text") or item.get("question") or "").strip()
+    return str(item).strip()
+
+
+def _normalize_flashcards(items: Any) -> list[dict[str, str]]:
+    """Normalize model flashcards into a stable storage format."""
+    normalized: list[dict[str, str]] = []
+    if not isinstance(items, list):
+        return normalized
+
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        front = str(
+            item.get("front") or item.get("question") or item.get("prompt") or ""
+        ).strip()
+        back = str(
+            item.get("back") or item.get("answer") or item.get("response") or ""
+        ).strip()
+        if front or back:
+            normalized.append(
+                {
+                    "type": "flashcard",
+                    "front": front,
+                    "back": back,
+                }
+            )
+    return normalized
+
+
+def _pack_study_items(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Persist questions and flashcards in the existing storage field."""
+    questions = []
+    for item in result.get("possible_exam_questions", []):
+        text = _normalize_question_text(item)
+        if text:
+            questions.append({"type": "question", "text": text})
+
+    flashcards = _normalize_flashcards(result.get("flashcards", []))
+    result["possible_exam_questions"] = questions + flashcards
+    result["flashcards"] = flashcards
+    return result
+
+
 def generate_structured_notes(
     text: str,
     config: Optional[Dict[str, Any]] = None,
@@ -142,7 +189,7 @@ def _parse_json_response(response_text: str, original_text: str) -> Dict[str, An
         try:
             result = json.loads(json_match.group(1))
             result["created_at"] = datetime.now(timezone.utc).isoformat()
-            return result
+            return _pack_study_items(result)
         except (json.JSONDecodeError, KeyError):
             pass
     return _generate_fallback(original_text, {})
@@ -175,6 +222,26 @@ def _generate_fallback(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
             freq[w] = freq.get(w, 0) + 1
     sorted_w = sorted(freq.items(), key=lambda x: -x[1])
     keywords = [w for w, _ in sorted_w[:15]]
+    important_points = [
+        lines[i] for i in range(min(5, len(lines))) if len(lines[i]) > 20
+    ]
+    exam_questions = [
+        {
+            "type": "question",
+            "text": f"What is the significance of: {point[:80]}?"
+        }
+        for point in important_points[:3]
+    ]
+    flashcards = []
+    for index, point in enumerate(important_points[:4], start=1):
+        topic_hint = keywords[index - 1] if index - 1 < len(keywords) else "this lecture"
+        flashcards.append(
+            {
+                "type": "flashcard",
+                "front": f"What should you remember about {topic_hint}?",
+                "back": point,
+            }
+        )
 
     return {
         "title": extract_title(text),
@@ -182,9 +249,9 @@ def _generate_fallback(text: str, config: Dict[str, Any]) -> Dict[str, Any]:
         "topics": ["Lecture Content"],
         "keywords": keywords,
         "summary": text[:500].strip() + ("..." if len(text) > 500 else ""),
-        "important_points": [lines[i] for i in range(min(5, len(lines)))
-                             if len(lines[i]) > 20],
-        "possible_exam_questions": [],
+        "important_points": important_points,
+        "possible_exam_questions": exam_questions + flashcards,
+        "flashcards": flashcards,
         "difficulty": difficulty,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }

@@ -16,8 +16,8 @@ from src.ingestion.docx_extractor import extract_text_from_docx
 from src.ingestion.ocr_processor import is_tesseract_available, ocr_pdf
 from src.ingestion.pdf_extractor import extract_text_from_pdf
 from src.ingestion.pptx_extractor import (
-    extract_presentation_metadata,
     extract_text_from_pptx,
+    extract_presentation_metadata,
 )
 from src.ingestion.txt_extractor import extract_text_from_txt
 from src.preprocessing.text_cleaner import clean_text
@@ -70,12 +70,6 @@ def _validate_uploaded_file(uploaded_file, max_file_size_mb: int) -> Optional[st
     return None
 
 
-@st.cache_data(show_spinner=False)
-def _inspect_presentation(file_bytes: bytes, extension: str) -> Dict[str, Any]:
-    """Validate and inspect a PowerPoint file for upload preview metadata."""
-    return extract_presentation_metadata(file_bytes, extension)
-
-
 def _get_upload_timestamp(uploaded_file) -> str:
     """Track the timestamp for the currently selected upload."""
     signature = f"{uploaded_file.name}:{uploaded_file.size}"
@@ -110,7 +104,6 @@ def _render_upload_dropzone() -> None:
 def _render_upload_preview(
     uploaded_file,
     timestamp: str,
-    presentation_metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Render the selected file preview panel."""
     file_type = Path(uploaded_file.name).suffix.lower().lstrip(".").upper()
@@ -118,22 +111,9 @@ def _render_upload_preview(
     preview_items = [
         ("File type", escape(file_type)),
         ("File size", escape(file_size)),
+        ("Upload timestamp", escape(timestamp)),
+        ("Status", "Validated and queued"),
     ]
-
-    if presentation_metadata:
-        preview_items.append(
-            ("Slides", str(int(presentation_metadata.get("slide_count", 0))))
-        )
-    preview_items.extend(
-        [
-            ("Upload timestamp", escape(timestamp)),
-            ("Status", "Validated and queued"),
-        ]
-    )
-    if presentation_metadata and presentation_metadata.get("author"):
-        preview_items.append(("Author", escape(str(presentation_metadata["author"]))))
-    if presentation_metadata and presentation_metadata.get("created"):
-        preview_items.append(("Created", escape(str(presentation_metadata["created"]))))
 
     preview_grid = "".join(
         f"""
@@ -144,17 +124,6 @@ def _render_upload_preview(
         """
         for label, value in preview_items
     )
-
-    preview_text = ""
-    if presentation_metadata and presentation_metadata.get("preview"):
-        preview_text = f"""
-        <div class="upload-preview-note">
-            <div class="upload-preview-label">Preview</div>
-            <div class="page-description" style="margin-top: 0.35rem;">
-                {escape(str(presentation_metadata["preview"]))}
-            </div>
-        </div>
-        """
 
     st.markdown(
         f"""
@@ -171,7 +140,6 @@ def _render_upload_preview(
             <div class="upload-preview-grid">
                 {preview_grid}
             </div>
-            {preview_text}
         </section>
         """,
         unsafe_allow_html=True,
@@ -210,25 +178,11 @@ def render_upload_page(config: Dict[str, Any]) -> None:
 
     validation_error = _validate_uploaded_file(uploaded_file, max_file_size_mb)
     upload_timestamp = _get_upload_timestamp(uploaded_file)
-    presentation_metadata: Optional[Dict[str, Any]] = None
-    extension = Path(uploaded_file.name).suffix.lower()
-    if validation_error is None and extension in {".pptx", ".ppt"}:
-        try:
-            presentation_metadata = _inspect_presentation(
-                uploaded_file.getvalue(),
-                extension,
-            )
-        except IngestionError as exc:
-            validation_error = str(exc)
 
     if validation_error:
         st.error(validation_error)
     else:
-        _render_upload_preview(
-            uploaded_file,
-            upload_timestamp,
-            presentation_metadata,
-        )
+        _render_upload_preview(uploaded_file, upload_timestamp)
 
     stepper_placeholder = st.empty()
     with stepper_placeholder.container():

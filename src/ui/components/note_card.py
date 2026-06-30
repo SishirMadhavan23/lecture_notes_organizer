@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Note card display component."""
 
+import re
 from html import escape
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, List, Tuple
 
 import streamlit as st
 
@@ -14,6 +15,238 @@ def _difficulty_tone(difficulty: str) -> str:
         "Advanced": "meta-pill",
     }
     return tones.get(difficulty, "meta-pill")
+
+
+def _format_file_size(size_bytes: int) -> str:
+    """Format file size for UI display."""
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    if size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes / 1024 / 1024:.2f} MB"
+
+
+def _is_presentation(note: Dict[str, Any]) -> bool:
+    """Return whether the note originated from a PowerPoint upload."""
+    return str(note.get("file_type", "")).lower() in {"pptx", "ppt"}
+
+
+def _normalize_study_items(
+    items: Iterable[Any],
+) -> Tuple[List[str], List[Dict[str, str]]]:
+    """Split stored study items into exam questions and flashcards."""
+    questions: List[str] = []
+    flashcards: List[Dict[str, str]] = []
+
+    for item in items or []:
+        if isinstance(item, dict):
+            item_type = str(item.get("type", "")).lower()
+            if item_type == "flashcard":
+                front = str(item.get("front", "")).strip()
+                back = str(item.get("back", "")).strip()
+                if front or back:
+                    flashcards.append({"front": front, "back": back})
+                continue
+
+            text = str(item.get("text", "")).strip()
+            if text:
+                questions.append(text)
+            continue
+
+        text = str(item).strip()
+        if text:
+            questions.append(text)
+
+    return questions, flashcards
+
+
+def _parse_presentation_details(raw_text: str) -> Dict[str, Any]:
+    """Parse presentation metadata and slide sections from stored raw text."""
+    metadata = {
+        "title": "",
+        "author": "",
+        "created": "",
+        "slide_count": 0,
+        "slides": [],
+        "has_speaker_notes": False,
+    }
+    if not raw_text.startswith("Presentation Metadata"):
+        return metadata
+
+    title_match = re.search(r"^Title:\s*(.*)$", raw_text, re.MULTILINE)
+    author_match = re.search(r"^Author:\s*(.*)$", raw_text, re.MULTILINE)
+    created_match = re.search(r"^Created:\s*(.*)$", raw_text, re.MULTILINE)
+    slide_count_match = re.search(r"^Slides:\s*(\d+)$", raw_text, re.MULTILINE)
+
+    metadata["title"] = (title_match.group(1).strip() if title_match else "")
+    metadata["author"] = (author_match.group(1).strip() if author_match else "")
+    metadata["created"] = (created_match.group(1).strip() if created_match else "")
+    metadata["slide_count"] = (
+        int(slide_count_match.group(1))
+        if slide_count_match else 0
+    )
+
+    slide_pattern = re.compile(
+        r"(?ms)^Slide (?P<number>\d+)\s*$\n(?P<body>.*?)(?=^Slide \d+\s*$|\Z)"
+    )
+    slides = []
+    for match in slide_pattern.finditer(raw_text):
+        number = int(match.group("number"))
+        body = match.group("body").strip()
+        if "Speaker Notes:" in body:
+            metadata["has_speaker_notes"] = True
+        slides.append({"number": number, "content": body})
+    metadata["slides"] = slides
+    return metadata
+
+
+def _render_general_tab(note: Dict[str, Any]) -> None:
+    """Render general note metadata."""
+    st.markdown(f"**Filename:** `{note.get('filename', 'N/A')}`")
+    st.markdown(f"**File type:** `{str(note.get('file_type', 'N/A')).upper()}`")
+    st.markdown(f"**File size:** {_format_file_size(int(note.get('file_size', 0) or 0))}")
+    st.markdown(f"**Upload time:** `{note.get('created_at', 'N/A')}`")
+    st.markdown(f"**Subject:** `{note.get('subject') or 'General'}`")
+
+
+def _render_intermediate_tab(note: Dict[str, Any]) -> None:
+    """Render AI-generated summary information."""
+    topics = note.get("topics", [])
+    keywords = note.get("keywords", [])
+    points = note.get("important_points", [])
+    summary = note.get("summary", "")
+
+    st.markdown("**Summary**")
+    st.write(summary or "No summary available yet.")
+
+    st.markdown("**Topics**")
+    if topics:
+        for topic in topics:
+            st.markdown(f"- {topic}")
+    else:
+        st.caption("No topics available.")
+
+    st.markdown("**Keywords**")
+    if keywords:
+        st.write(", ".join(str(keyword) for keyword in keywords))
+    else:
+        st.caption("No keywords available.")
+
+    st.markdown("**Important points**")
+    if points:
+        for point in points:
+            st.markdown(f"- {point}")
+    else:
+        st.caption("No important points available.")
+
+
+def _render_presentation_metadata_tab(note: Dict[str, Any]) -> None:
+    """Render PowerPoint-specific metadata."""
+    presentation = _parse_presentation_details(note.get("raw_text", ""))
+    st.markdown(
+        f"**Presentation title:** `{presentation['title'] or note.get('title') or 'Unknown'}`"
+    )
+    st.markdown(f"**Author:** `{presentation['author'] or 'Unknown'}`")
+    st.markdown(f"**Number of slides:** `{presentation['slide_count'] or 0}`")
+    st.markdown(f"**Created date:** `{presentation['created'] or 'Unknown'}`")
+
+    st.markdown("**Slide metadata**")
+    if presentation["slides"]:
+        slide_labels = ", ".join(
+            f"Slide {slide['number']}" for slide in presentation["slides"]
+        )
+        st.write(slide_labels)
+    else:
+        st.caption("No slide metadata available.")
+
+    st.markdown("**Extraction information**")
+    st.write(
+        "Extracted locally with the offline PowerPoint parser and stored in SQLite."
+    )
+    st.write(
+        f"Speaker notes detected: {'Yes' if presentation['has_speaker_notes'] else 'No'}"
+    )
+
+
+def _render_content_tabs(note: Dict[str, Any]) -> None:
+    """Render the document detail tabs."""
+    questions, flashcards = _normalize_study_items(
+        note.get("possible_exam_questions", [])
+    )
+    presentation = _parse_presentation_details(note.get("raw_text", ""))
+
+    labels = ["Overview", "Summary", "Topics"]
+    if _is_presentation(note):
+        labels.append("Slides")
+    labels.extend(["Flashcards", "Questions"])
+    tabs = st.tabs(labels)
+    tab_map = dict(zip(labels, tabs))
+
+    with tab_map["Overview"]:
+        st.markdown(f"**Title:** {note.get('title') or note.get('filename', 'Untitled')}")
+        st.markdown(f"**Subject:** {note.get('subject') or 'General'}")
+        st.markdown(f"**Difficulty:** {note.get('difficulty') or 'Intermediate'}")
+        st.markdown(f"**Processed:** `{note.get('created_at', 'N/A')}`")
+        st.markdown(
+            f"**File:** `{note.get('filename', 'N/A')} ({str(note.get('file_type', 'N/A')).upper()})`"
+        )
+        st.write(note.get("summary") or "No summary available yet.")
+
+    with tab_map["Summary"]:
+        st.write(note.get("summary") or "No summary available yet.")
+        points = note.get("important_points", [])
+        if points:
+            st.markdown("**Important points**")
+            for point in points:
+                st.markdown(f"- {point}")
+
+    with tab_map["Topics"]:
+        topics = note.get("topics", [])
+        keywords = note.get("keywords", [])
+        if topics:
+            st.markdown("**Topics**")
+            for topic in topics:
+                st.markdown(f"- {topic}")
+        else:
+            st.caption("No topics available.")
+
+        if keywords:
+            st.markdown("**Keywords**")
+            st.write(", ".join(str(keyword) for keyword in keywords))
+        else:
+            st.caption("No keywords available.")
+
+    if "Slides" in tab_map:
+        with tab_map["Slides"]:
+            st.markdown(
+                f"**Presentation title:** {presentation['title'] or note.get('title') or 'Unknown'}"
+            )
+            st.markdown(f"**Author:** {presentation['author'] or 'Unknown'}")
+            st.markdown(f"**Created date:** {presentation['created'] or 'Unknown'}")
+            st.markdown(f"**Slide count:** {presentation['slide_count'] or 0}")
+
+            if presentation["slides"]:
+                for slide in presentation["slides"]:
+                    with st.expander(f"Slide {slide['number']}", expanded=False):
+                        st.text(slide["content"])
+            else:
+                st.caption("No slide content available.")
+
+    with tab_map["Flashcards"]:
+        if flashcards:
+            for index, flashcard in enumerate(flashcards, start=1):
+                with st.expander(f"Flashcard {index}", expanded=False):
+                    st.markdown(f"**Front:** {flashcard['front'] or 'N/A'}")
+                    st.markdown(f"**Back:** {flashcard['back'] or 'N/A'}")
+        else:
+            st.caption("No flashcards available.")
+
+    with tab_map["Questions"]:
+        if questions:
+            for question in questions:
+                st.markdown(f"- {question}")
+        else:
+            st.caption("No exam questions available.")
 
 
 def render_note_card(note: Dict[str, Any], expanded: bool = False) -> None:
@@ -29,8 +262,6 @@ def render_note_card(note: Dict[str, Any], expanded: bool = False) -> None:
     summary = note.get("summary", "")
     topics = note.get("topics", [])
     keywords = note.get("keywords", [])
-    questions = note.get("possible_exam_questions", [])
-    points = note.get("important_points", [])
 
     with st.container(border=True):
         meta_items = []
@@ -77,20 +308,18 @@ def render_note_card(note: Dict[str, Any], expanded: bool = False) -> None:
             )
 
         with st.expander("Document details", expanded=expanded):
-            if topics:
-                st.markdown("**Topics:** " + ", ".join(f"`{t}`" for t in topics))
-            if keywords:
-                st.markdown("**Keywords:** " + ", ".join(f"`{k}`" for k in keywords))
-            if points:
-                st.markdown("**Key points:**")
-                for pt in points:
-                    st.markdown(f"- {pt}")
-            if questions:
-                st.markdown("**Possible exam questions:**")
-                for q in questions:
-                    st.markdown(f"- {q}")
+            if _is_presentation(note):
+                general_label = note.get("subject") or "General"
+                intermediate_label = note.get("difficulty") or "Intermediate"
+                pptx_label = str(note.get("file_type", "PPTX")).upper()
+                general_tab, intermediate_tab, pptx_tab = st.tabs(
+                    [general_label, intermediate_label, pptx_label]
+                )
+                with general_tab:
+                    _render_general_tab(note)
+                with intermediate_tab:
+                    _render_intermediate_tab(note)
+                with pptx_tab:
+                    _render_presentation_metadata_tab(note)
 
-            st.caption(f"Processed: {note.get('created_at', 'N/A')}")
-            st.caption(
-                f"File: {note.get('filename', 'N/A')} ({note.get('file_type', 'N/A')})"
-            )
+            _render_content_tabs(note)

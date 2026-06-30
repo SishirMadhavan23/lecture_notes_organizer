@@ -15,6 +15,7 @@ USER_PROMPT_TEMPLATE = """Analyze the following lecture notes and return a JSON 
 - summary: A 3-5 sentence summary of the content
 - important_points: Array of key takeaways (3-6 items)
 - possible_exam_questions: Array of potential exam questions (2-5 items)
+- flashcards: Array of 3-6 objects with "front" and "back" fields for offline study
 - difficulty: One of "Beginner", "Intermediate", or "Advanced"
 - created_at: Current date in ISO 8601 format
 
