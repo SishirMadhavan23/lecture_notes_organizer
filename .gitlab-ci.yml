@@ -1,9 +1,17 @@
 stages:
+  - format
   - lint
-  - quality
+  - type_check
   - test
+  - coverage
   - security
-  - precommit
+  - audit
+  - changelog
+
+default:
+  image: python:3.11-slim
+  tags:
+    - docker
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -14,11 +22,19 @@ cache:
     - .venv/
 
 before_script:
-  - python -m venv .venv
-  - source .venv/bin/activate || .venv\Scripts\activate
+  - python -m pip install --upgrade pip
   - pip install -r requirements.txt
 
-# --- Lint stage ---
+# ── Format Stage ──────────────────────────────────────────────
+
+ruff-format:
+  stage: format
+  script:
+    - pip install ruff
+    - ruff format --check --line-length=88 src/ tests/
+  allow_failure: false
+
+# ── Lint Stage ────────────────────────────────────────────────
 
 ruff:
   stage: lint
@@ -41,23 +57,37 @@ isort:
     - isort --check-only --profile=black --line-length=88 src/ tests/
   allow_failure: false
 
-# --- Quality stage ---
-
-ruff-format:
-  stage: quality
+pylint:
+  stage: lint
   script:
-    - pip install ruff
-    - ruff format --check src/ tests/
-  allow_failure: false
+    - pip install pylint
+    - pylint src/ --fail-under=7.0 || true
+  allow_failure: true
+
+flake8:
+  stage: lint
+  script:
+    - pip install flake8
+    - flake8 src/ tests/ --max-line-length=88
+  allow_failure: true
+
+pyupgrade:
+  stage: lint
+  script:
+    - pip install pyupgrade
+    - pyupgrade --py311-plus $(find src/ tests/ -name "*.py") || true
+  allow_failure: true
+
+# ── Type Check Stage ──────────────────────────────────────────
 
 mypy:
-  stage: quality
+  stage: type_check
   script:
     - pip install mypy
     - mypy --strict --ignore-missing-imports src/
   allow_failure: true
 
-# --- Test stage ---
+# ── Test Stage ────────────────────────────────────────────────
 
 pytest:
   stage: test
@@ -69,7 +99,20 @@ pytest:
       - htmlcov/
     expire_in: 30 days
 
-# --- Security stage ---
+# ── Coverage Stage ────────────────────────────────────────────
+
+coverage:
+  stage: coverage
+  script:
+    - pip install pytest pytest-cov
+    - pytest --cov=src/ --cov-report=term --cov-report=html --cov-fail-under=80 tests/
+  allow_failure: true
+  artifacts:
+    paths:
+      - htmlcov/
+    expire_in: 30 days
+
+# ── Security Stage ────────────────────────────────────────────
 
 bandit:
   stage: security
@@ -92,32 +135,27 @@ detect-secrets:
     - detect-secrets scan --baseline .secrets.baseline || echo "No baseline"
   allow_failure: true
 
-# --- Pre-commit stage ---
-
-trailing-whitespace:
-  stage: precommit
+semgrep:
+  stage: security
   script:
-    - pip install pre-commit
-    - pre-commit run trailing-whitespace --all-files || echo "Check completed"
+    - pip install semgrep
+    - semgrep --config=auto --error --quiet src/ || true
   allow_failure: true
 
-end-of-file-fixer:
-  stage: precommit
+# ── Audit Stage ───────────────────────────────────────────────
+
+pip-audit:
+  stage: audit
   script:
-    - pip install pre-commit
-    - pre-commit run end-of-file-fixer --all-files || echo "Check completed"
+    - pip install pip-audit
+    - pip-audit --requirement requirements.txt
   allow_failure: true
 
-check-yaml:
-  stage: precommit
-  script:
-    - pip install pre-commit
-    - pre-commit run check-yaml --all-files || echo "Check completed"
-  allow_failure: true
+# ── Changelog Stage ───────────────────────────────────────────
 
-check-json:
-  stage: precommit
+git-cliff:
+  stage: changelog
   script:
-    - pip install pre-commit
-    - pre-commit run check-json --all-files || echo "Check completed"
+    - pip install git-cliff
+    - git-cliff --unreleased --check || true
   allow_failure: true

@@ -1,19 +1,55 @@
-# SPDX-License-Identifier: AGPL-3.0-only
-.git
-venv
+# Git
+.git/
+.gitignore
+.gitattributes
+.gitlab-ci.yml
+.pre-commit-config.yaml
+.runner_system_id
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
 .env
-__pycache__
-.pytest_cache
-.mypy_cache
-.ruff_cache
-*.pyc
-*.pyo
+*.whl
+dist/
+build/
+
+# Data
+data/
+logs/
+models/
+sample_data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-.vscode
-.idea
-*.egg-info
-dist
-build
-htmlcov
+Thumbs.db
+
+# Testing
+.pytest_cache/
+htmlcov/
 .coverage
-coverage.xml
+.coverage.*
+*.report
+
+# Secrets
+.secrets.baseline
+.secrets
+
+# Documentation
+docs/
+
+# Docker
+Dockerfile
+.dockerignore

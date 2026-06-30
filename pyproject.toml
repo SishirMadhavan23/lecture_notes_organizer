@@ -4,16 +4,16 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
 name = "lecture-notes-organizer"
-version = "0.3.0"
-description = "Offline AI Lecture Notes Organizer - CPU-First Hackathon"
+version = "0.1.0"
+description = "An offline, CPU-first AI-powered lecture notes organizer that uses NLP and clustering to automatically categorize and summarize lecture content."
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "GPL-3.0-or-later"}
+license = {text = "AGPL-3.0-or-later"}
 keywords = ["lecture-notes", "offline-ai", "cpu-first", "hackathon"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Education",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: GNU Affero General Public License v3 (AGPLv3)",
     "Programming Language :: Python :: 3.11",
     "Topic :: Education",
 ]
@@ -51,7 +51,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
-ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
