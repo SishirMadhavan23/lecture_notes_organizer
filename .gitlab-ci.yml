@@ -5,6 +5,8 @@ stages:
   - test
   - coverage
   - security
+  - audit
+  - changelog
 
 default:
   image: python:3.11-slim
@@ -54,6 +56,27 @@ isort:
     - pip install isort
     - isort --check-only --profile=black --line-length=88 src/ tests/
   allow_failure: false
+
+pylint:
+  stage: lint
+  script:
+    - pip install pylint
+    - pylint src/ --fail-under=7.0 || true
+  allow_failure: true
+
+flake8:
+  stage: lint
+  script:
+    - pip install flake8
+    - flake8 src/ tests/ --max-line-length=88
+  allow_failure: true
+
+pyupgrade:
+  stage: lint
+  script:
+    - pip install pyupgrade
+    - pyupgrade --py311-plus $(find src/ tests/ -name "*.py") || true
+  allow_failure: true
 
 # ── Type Check Stage ──────────────────────────────────────────
 
@@ -110,4 +133,29 @@ detect-secrets:
   script:
     - pip install detect-secrets
     - detect-secrets scan --baseline .secrets.baseline || echo "No baseline"
+  allow_failure: true
+
+semgrep:
+  stage: security
+  script:
+    - pip install semgrep
+    - semgrep --config=auto --error --quiet src/ || true
+  allow_failure: true
+
+# ── Audit Stage ───────────────────────────────────────────────
+
+pip-audit:
+  stage: audit
+  script:
+    - pip install pip-audit
+    - pip-audit --requirement requirements.txt
+  allow_failure: true
+
+# ── Changelog Stage ───────────────────────────────────────────
+
+git-cliff:
+  stage: changelog
+  script:
+    - pip install git-cliff
+    - git-cliff --unreleased --check || true
   allow_failure: true
