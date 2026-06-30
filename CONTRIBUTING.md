@@ -25,6 +25,9 @@ See README.md for basic setup instructions.
 - All new features must include tests
 - Run `pytest` before submitting
 - Maintain minimum 80% code coverage
+- For web UI changes, launch `streamlit run src/app.py` and verify upload,
+  OCR, AI summaries, flashcards, SQLite persistence, search, and offline
+  operation.
 
 ## Commit Guidelines
 

@@ -22,12 +22,15 @@ def render_sidebar() -> None:
         pages = [
             ("Upload", "\u21e7"),
             ("View Notes", "\u25a4"),
+            ("Flashcards", "\u25c7"),
             ("Search", "\u2315"),
             ("Settings", "\u2699"),
             ("System Status", "\u25c8"),
         ]
         current_page = st.session_state.get("current_page", "Upload")
-        st.markdown('<p class="sidebar-nav-label">Workspace</p>', unsafe_allow_html=True)
+        st.markdown(
+            '<p class="sidebar-nav-label">Workspace</p>', unsafe_allow_html=True
+        )
         for page, icon in pages:
             if st.button(
                 f"{icon}  {page}",

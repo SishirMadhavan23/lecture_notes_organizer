@@ -10,8 +10,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 
 from src.storage.database import get_engine
-from src.ui.components.sidebar import render_sidebar
 from src.ui.components.dashboard import render_footer
+from src.ui.components.sidebar import render_sidebar
+from src.ui.pages.flashcards import render_flashcards
 from src.ui.pages.search import render_search
 from src.ui.pages.settings import render_settings
 from src.ui.pages.system_status import render_system_status
@@ -26,7 +27,14 @@ def init_session_state(config) -> None:
     if "current_page" not in st.session_state:
         st.session_state.current_page = "Upload"
     requested_page = st.query_params.get("page")
-    valid_pages = {"Upload", "View Notes", "Search", "Settings", "System Status"}
+    valid_pages = {
+        "Upload",
+        "View Notes",
+        "Flashcards",
+        "Search",
+        "Settings",
+        "System Status",
+    }
     if requested_page in valid_pages:
         st.session_state.current_page = requested_page
     if "config" not in st.session_state:
@@ -35,7 +43,6 @@ def init_session_state(config) -> None:
             "llm_backend": config.llm_backend,
             "ollama_base_url": config.ollama_base_url,
             "ollama_model": config.ollama_model,
-            "llama_cpp_model_path": config.llama_cpp_model_path,
             "temperature": config.temperature,
             "context_length": config.context_length,
             "tesseract_enabled": config.tesseract_enabled,
@@ -74,14 +81,23 @@ def main() -> None:
         render_upload_page(cfg)
     elif page == "View Notes":
         render_view_notes(cfg)
+    elif page == "Flashcards":
+        render_flashcards(cfg)
     elif page == "Search":
         render_search(cfg)
     elif page == "Settings":
         render_settings(cfg)
         # Update config from session state
-        for key in ["llm_backend", "temperature", "context_length",
-                     "tesseract_enabled", "ollama_base_url", "ollama_model",
-                     "llama_cpp_model_path", "tesseract_path", "database_url"]:
+        for key in [
+            "llm_backend",
+            "temperature",
+            "context_length",
+            "tesseract_enabled",
+            "ollama_base_url",
+            "ollama_model",
+            "tesseract_path",
+            "database_url",
+        ]:
             if key in st.session_state:
                 cfg[key] = st.session_state[key]
     elif page == "System Status":

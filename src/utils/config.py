@@ -8,7 +8,7 @@ import os
 import platform
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -22,7 +22,6 @@ class AppConfig:
     database_url: str = "sqlite:///data/lecture_notes.db"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "phi3:mini"
-    llama_cpp_model_path: Optional[str] = None
     llm_backend: str = "ollama"
     context_length: int = 4096
     temperature: float = 0.1
@@ -60,12 +59,14 @@ class AppConfig:
         return payload
 
     @classmethod
-    def from_dict(cls, values: dict[str, Any]) -> "AppConfig":
+    def from_dict(cls, values: dict[str, Any]) -> AppConfig:
         """Build a config instance from a serialized dictionary."""
         normalized = dict(values)
+        normalized.pop("llama_cpp_model_path", None)
         for key in ("base_dir", "data_dir", "model_dir", "log_dir"):
             if key in normalized and normalized[key]:
                 normalized[key] = Path(normalized[key])
+        normalized["llm_backend"] = "ollama"
         return cls(**normalized)
 
 
@@ -102,7 +103,7 @@ def save_config(config: AppConfig) -> AppConfig:
     return config
 
 
-def reset_config(base_dir: Optional[Path] = None) -> AppConfig:
+def reset_config(base_dir: Path | None = None) -> AppConfig:
     """Reset persisted configuration back to defaults."""
     config = AppConfig(base_dir=base_dir or AppConfig.base_dir)
     if config.config_path.exists():
@@ -110,7 +111,7 @@ def reset_config(base_dir: Optional[Path] = None) -> AppConfig:
     return config
 
 
-def load_config(base_dir: Optional[Path] = None) -> AppConfig:
+def load_config(base_dir: Path | None = None) -> AppConfig:
     """Load configuration from disk and environment with defaults."""
     cfg = AppConfig(base_dir=base_dir or AppConfig.base_dir)
     persisted_values = _load_config_file(cfg.config_path)
@@ -121,8 +122,7 @@ def load_config(base_dir: Optional[Path] = None) -> AppConfig:
         cfg.ollama_base_url = os.environ["OLLAMA_BASE_URL"]
     if os.getenv("OLLAMA_MODEL"):
         cfg.ollama_model = os.environ["OLLAMA_MODEL"]
-    if os.getenv("LLM_BACKEND"):
-        cfg.llm_backend = os.environ["LLM_BACKEND"]
+    cfg.llm_backend = "ollama"
     if os.getenv("TESSERACT_PATH"):
         cfg.tesseract_path = os.environ["TESSERACT_PATH"]
     cfg.data_dir.mkdir(parents=True, exist_ok=True)

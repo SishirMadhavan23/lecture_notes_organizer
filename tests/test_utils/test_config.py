@@ -30,7 +30,7 @@ class TestAppConfig:
             original_cwd = os.getcwd()
             try:
                 os.chdir(tmpdir)
-                config = load_config()
+                load_config()
                 assert Path("data").exists()
                 assert Path("models").exists()
                 assert Path("logs").exists()
@@ -41,12 +41,12 @@ class TestAppConfig:
         """Test that environment variables override defaults."""
         monkeypatch.setenv("OLLAMA_BASE_URL", "http://custom:11434")
         monkeypatch.setenv("OLLAMA_MODEL", "qwen2.5:1.5b")
-        monkeypatch.setenv("LLM_BACKEND", "llama.cpp")
+        monkeypatch.setenv("LLM_BACKEND", "ignored")
 
         config = load_config()
         assert config.ollama_base_url == "http://custom:11434"
         assert config.ollama_model == "qwen2.5:1.5b"
-        assert config.llm_backend == "llama.cpp"
+        assert config.llm_backend == "ollama"
 
     def test_config_persists_to_disk(self):
         """Test that config is saved and loaded from the JSON config file."""

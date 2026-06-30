@@ -4,18 +4,18 @@
 import platform
 import sys
 from html import escape
-from typing import Any, Dict
+from typing import Any
 
 import streamlit as st
 
-from src.ai.model_manager import is_ollama_available, is_llama_cpp_available
+from src.ai.model_manager import is_ollama_available
 from src.ingestion.ocr_processor import is_tesseract_available
 from src.storage.database import get_stats
 from src.ui.components.dashboard import render_stat_cards, render_status_card
 from src.ui.components.page_header import render_page_header
 
 
-def render_system_status(config: Dict[str, Any]) -> None:
+def render_system_status(config: dict[str, Any]) -> None:
     """Render the system status dashboard."""
     render_page_header(
         "System Status",
@@ -30,8 +30,6 @@ def render_system_status(config: Dict[str, Any]) -> None:
         config.get("ollama_base_url", "http://localhost:11434")
     )
     tesseract_ok = is_tesseract_available(config.get("tesseract_path"))
-    model_path = config.get("llama_cpp_model_path", "")
-    llama_ok = is_llama_cpp_available(model_path) if model_path else False
 
     st.markdown("### Configuration health")
     col1, col2, col3 = st.columns(3)
@@ -39,9 +37,11 @@ def render_system_status(config: Dict[str, Any]) -> None:
         render_status_card(
             "Ollama",
             "Running" if ollama_ok else "Unavailable",
-            "Local model server is ready."
-            if ollama_ok
-            else "Server could not be reached.",
+            (
+                "Local model server is ready."
+                if ollama_ok
+                else "Server could not be reached."
+            ),
             "success" if ollama_ok else "error",
             "AI",
         )
@@ -49,25 +49,21 @@ def render_system_status(config: Dict[str, Any]) -> None:
         render_status_card(
             "Tesseract OCR",
             "Configured" if tesseract_ok else "Not installed",
-            "OCR is available for scanned notes."
-            if tesseract_ok
-            else "Install or select an executable.",
+            (
+                "OCR is available for scanned notes."
+                if tesseract_ok
+                else "Install or select an executable."
+            ),
             "success" if tesseract_ok else "error",
             "OCR",
         )
     with col3:
         render_status_card(
-            "llama.cpp",
-            "Configured" if llama_ok else ("Error" if model_path else "Optional"),
-            "GGUF model is ready."
-            if llama_ok
-            else (
-                "Configured model was not found."
-                if model_path
-                else "Optional CPU inference backend."
-            ),
-            "success" if llama_ok else ("error" if model_path else "warning"),
-            "CPU",
+            "SQLite",
+            "Ready",
+            "Local storage is initialized on this machine.",
+            "success",
+            "DB",
         )
 
     st.markdown("### Processing statistics")
@@ -76,12 +72,7 @@ def render_system_status(config: Dict[str, Any]) -> None:
         stats = get_stats()
         durations = st.session_state.get("processing_durations", [])
         average_duration = sum(durations) / len(durations) if durations else 0.0
-        backend = config.get("llm_backend", "ollama")
-        current_model = (
-            config.get("ollama_model", "Not selected")
-            if backend == "ollama"
-            else (model_path.rsplit("/", 1)[-1].rsplit("\\", 1)[-1] or "Not selected")
-        )
+        current_model = config.get("ollama_model", "Not selected")
         render_stat_cards(
             (
                 {
@@ -102,7 +93,7 @@ def render_system_status(config: Dict[str, Any]) -> None:
                 {
                     "label": "Current AI model",
                     "value": str(current_model),
-                    "hint": backend,
+                    "hint": "Ollama",
                 },
             )
         )
@@ -112,12 +103,14 @@ def render_system_status(config: Dict[str, Any]) -> None:
     st.markdown("---")
 
     with st.expander("System information"):
-        st.json({
-            "Platform": platform.platform(),
-            "Python": sys.version,
-            "Architecture": platform.machine(),
-            "Processor": platform.processor(),
-        })
+        st.json(
+            {
+                "Platform": platform.platform(),
+                "Python": sys.version,
+                "Architecture": platform.machine(),
+                "Processor": platform.processor(),
+            }
+        )
 
     with st.expander("Installed packages"):
         packages = {
@@ -128,7 +121,6 @@ def render_system_status(config: Dict[str, Any]) -> None:
             "requests": "requests",
             "pytesseract": "pytesseract",
             "Pillow": "PIL",
-            "llama-cpp-python": "llama_cpp",
             "unidecode": "unidecode",
         }
         package_status = {label: False for label in packages}
@@ -141,7 +133,8 @@ def render_system_status(config: Dict[str, Any]) -> None:
 
         rows = "".join(
             f'<div class="status-list-row"><span>{escape(pkg)}</span>'
-            f'<span class="status-badge status-badge--{"success" if installed else "error"}">'
+            f'<span class="status-badge '
+            f'status-badge--{"success" if installed else "error"}">'
             f'{"Configured" if installed else "Not installed"}</span></div>'
             for pkg, installed in package_status.items()
         )

@@ -11,7 +11,6 @@
 
 ### AI / ML Engineer (1-2 persons)
 - Ollama integration
-- llama.cpp integration
 - Prompt engineering
 - Model selection and quantization
 - JSON schema validation
