@@ -20,7 +20,7 @@ def is_ollama_available(base_url: str | None = None) -> bool:
     resolved_base_url = base_url or load_config().ollama_base_url
     try:
         resp = requests.get(f"{resolved_base_url}/api/tags", timeout=3)
-        return resp.status_code == 200
+        return bool(resp.status_code == 200)
     except (requests.ConnectionError, requests.Timeout):
         return False
 
@@ -132,7 +132,7 @@ def _query_ollama(text: str, config: dict[str, Any]) -> dict[str, Any]:
     resp = requests.post(
         f"{base_url}/api/generate",
         json=payload,
-        timeout=config.get("timeout", 120),  # nosec B113
+        timeout=config.get("timeout", 120),
     )
     if resp.status_code == 404:
         raise ModelNotFoundError(f"Model '{model}' not found. Run: ollama pull {model}")
