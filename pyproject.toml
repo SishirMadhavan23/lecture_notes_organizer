@@ -53,6 +53,15 @@ show_error_codes = true
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+exclude = [
+".venv",
+".git",
+".mypy_cache",
+".pytest_cache",
+".ruff_cache",
+"data",
+"logs",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]

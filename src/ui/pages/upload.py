@@ -112,12 +112,15 @@ def _render_upload_preview(
         ("Status", "Validated and queued"),
     ]
 
-    preview_grid = "".join(f"""
+    preview_grid = "".join(
+        f"""
         <div>
             <div class="upload-preview-label">{escape(label)}</div>
             <div class="upload-preview-value">{value}</div>
         </div>
-        """ for label, value in preview_items)
+        """
+        for label, value in preview_items
+    )
 
     st.markdown(
         f"""
