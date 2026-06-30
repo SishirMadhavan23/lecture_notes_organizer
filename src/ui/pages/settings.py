@@ -1,4 +1,5 @@
-"""Settings page for Streamlit UI."""
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Settings page for Streamlit UI with multilingual support."""
 
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ from src.utils.integrations import (
     test_ollama_connection,
     test_tesseract_connection,
 )
+from src.utils.translations import t
 
 logger = logging.getLogger(__name__)
 
@@ -77,45 +79,49 @@ def _render_status_panels() -> None:
     col1, col2 = st.columns(2)
     with col1:
         with st.container(border=True):
-            st.markdown("**Connection Status**")
+            st.markdown(f"**{t('settings.label_connection_status')}**")
             if tesseract_status:
                 message = (
-                    "Connected"
+                    t("settings.status_connected")
                     if tesseract_status.get("ok")
-                    else tesseract_status.get("message", "Not tested")
+                    else tesseract_status.get("message", t("settings.status_not_tested"))
                 )
                 level = st.success if tesseract_status.get("ok") else st.error
-                level(f"Tesseract: {message}")
+                level(t("settings.status_tesseract_connected", message=message))
             else:
-                st.info("Tesseract connection has not been tested yet.")
+                st.info(t("settings.status_tesseract_not_tested"))
 
             if ollama_status:
                 message = (
-                    "Ollama Connected"
+                    t("settings.status_connected")
                     if ollama_status.get("ok")
-                    else ollama_status.get("message", "Not tested")
+                    else ollama_status.get("message", t("settings.status_not_tested"))
                 )
                 level = st.success if ollama_status.get("ok") else st.error
-                level(f"Ollama: {message}")
+                level(t("settings.status_ollama_connected", message=message))
             else:
-                st.info("Ollama connection has not been tested yet.")
+                st.info(t("settings.status_ollama_not_tested"))
 
     with col2:
         with st.container(border=True):
-            st.markdown("**Version Information**")
+            st.markdown(f"**{t('settings.label_version_info')}**")
             tesseract_version = (
-                tesseract_status.get("version", "Unavailable") or "Unavailable"
+                tesseract_status.get("version", t("common.not_available"))
+                or t("common.not_available")
             )
             ollama_version = (
-                ollama_status.get("version", "Unavailable") or "Unavailable"
+                ollama_status.get("version", t("common.not_available"))
+                or t("common.not_available")
             )
-            st.caption(f"Tesseract: {tesseract_version}")
-            st.caption(f"Ollama: {ollama_version}")
+            st.caption(t("settings.label_tesseract_version", version=tesseract_version))
+            st.caption(t("settings.label_ollama_version", version=ollama_version))
             models = ollama_status.get("models", [])
             if models:
-                st.caption(f"Model Status: {len(models)} installed model(s) detected")
+                st.caption(
+                    t("settings.label_model_status", count=len(models))
+                )
             else:
-                st.caption("Model Status: No detected models yet")
+                st.caption(t("settings.label_no_models"))
 
 
 def _save_settings() -> None:
@@ -162,7 +168,7 @@ def _save_settings() -> None:
             "database_url": updated.database_url,
         }
     )
-    st.success("Settings saved successfully.")
+    st.success(t("settings.success_saved"))
 
 
 def _reset_settings() -> None:
@@ -191,7 +197,7 @@ def _reset_settings() -> None:
             "database_url": defaults.database_url,
         }
     )
-    st.success("Settings reset to defaults.")
+    st.success(t("settings.success_reset"))
     st.rerun()
 
 
@@ -200,79 +206,71 @@ def render_settings(config: dict[str, Any]) -> None:
     _ensure_settings_state(config)
 
     render_page_header(
-        "System Settings",
-        (
-            "Configure local model behavior, OCR support, and storage preferences "
-            "for your offline study workflow."
-        ),
-        "Configuration",
+        t("settings.page_title"),
+        t("settings.page_description"),
+        t("settings.page_eyebrow"),
     )
 
-    with st.expander("AI & OCR Configuration", expanded=True):
-        st.markdown("### OCR Configuration")
+    with st.expander(t("settings.section_ai_ocr"), expanded=True):
+        st.markdown(f"### {t('settings.section_ocr')}")
         st.text_input(
-            "Tesseract executable path",
+            t("settings.label_tesseract_path"),
             key="tesseract_path",
-            help="Enter the full path to the Tesseract executable on this machine.",
+            help=t("settings.help_tesseract_path"),
         )
         t_col1, t_col2, t_col3 = st.columns(3)
         with t_col1:
             st.button(
-                "Browse",
+                t("settings.button_browse"),
                 disabled=True,
-                help=(
-                    "Native executable browsing is not available in standard "
-                    "Streamlit browser deployments."
-                ),
+                help=t("settings.help_browse"),
             )
         with t_col2:
-            if st.button("Auto-detect Tesseract", use_container_width=True):
+            if st.button(t("settings.button_auto_detect"), use_container_width=True):
                 detected_path = detect_tesseract_path()
                 if detected_path:
                     st.session_state["tesseract_path"] = detected_path
-                    st.success(f"Detected Tesseract at {detected_path}")
-                else:
-                    st.warning(
-                        "No Tesseract installation detected in common locations."
+                    st.success(
+                        t("settings.success_tesseract_detected", path=detected_path)
                     )
+                else:
+                    st.warning(t("settings.warning_tesseract_not_found"))
         with t_col3:
-            if st.button("Test Tesseract", use_container_width=True):
+            if st.button(t("settings.button_test_tesseract"), use_container_width=True):
                 st.session_state[TESSERACT_STATUS_KEY] = test_tesseract_connection(
                     st.session_state.get("tesseract_path", "")
                 )
 
         st.markdown("---")
-        st.markdown("### AI Configuration")
+        st.markdown(f"### {t('settings.section_ai')}")
         st.text_input(
-            "Ollama Host",
+            t("settings.label_ollama_host"),
             key="ollama_base_url",
-            help="Example: http://localhost:11434",
+            help=t("settings.help_ollama_host"),
         )
 
         host = st.session_state.get("ollama_base_url", "http://localhost:11434")
         detect_col, refresh_col, test_col = st.columns(3)
         with detect_col:
-            if st.button("Detect Ollama", use_container_width=True):
+            if st.button(t("settings.button_detect_ollama"), use_container_width=True):
                 detected_host = detect_ollama_host(host)
                 if detected_host:
                     st.session_state["ollama_base_url"] = detected_host
                     models = get_ollama_models(detected_host)
                     _store_models(models, st.session_state.get("ollama_model", ""))
-                    st.success("Ollama server detected.")
+                    st.success(t("settings.success_ollama_detected"))
                 else:
-                    st.error(
-                        "Unable to detect an Ollama server at the configured host."
-                    )
+                    st.error(t("settings.error_ollama_not_found"))
         with refresh_col:
-            if st.button("Refresh Models", use_container_width=True):
+            if st.button(t("settings.button_refresh_models"), use_container_width=True):
                 models = get_ollama_models(host)
                 _store_models(models, st.session_state.get("ollama_model", ""))
                 if models:
-                    st.success("Installed models refreshed.")
+                    st.success(t("settings.success_models_refreshed"))
                 else:
-                    st.warning("No installed models were detected.")
+                    st.warning(t("settings.warning_no_models"))
         with test_col:
-            if st.button("Test Ollama", use_container_width=True):
+            if st.button(t("settings.button_test_ollama"), use_container_width=True):
                 result = test_ollama_connection(
                     host,
                     st.session_state.get("ollama_model", ""),
@@ -289,10 +287,10 @@ def render_settings(config: dict[str, Any]) -> None:
         if current_model and current_model not in model_options:
             model_options.append(current_model)
         if not model_options:
-            model_options = ["No models detected"]
+            model_options = [t("settings.no_models_detected")]
 
         st.selectbox(
-            "Model Dropdown",
+            t("settings.label_model"),
             options=model_options,
             index=(
                 model_options.index(current_model)
@@ -300,47 +298,47 @@ def render_settings(config: dict[str, Any]) -> None:
                 else 0
             ),
             key="ollama_model",
-            disabled=model_options == ["No models detected"],
-            help="Detected from `ollama list` or the Ollama API.",
+            disabled=model_options == [t("settings.no_models_detected")],
+            help=t("settings.help_model"),
         )
 
         _render_status_panels()
 
-    with st.expander("Processing Preferences", expanded=True):
+    with st.expander(t("settings.section_processing"), expanded=True):
         st.session_state["llm_backend"] = "ollama"
-        st.info("AI generation uses local Ollama only. No cloud inference is used.")
+        st.info(t("settings.label_backend_info"))
 
         st.slider(
-            "Temperature",
+            t("settings.label_temperature"),
             min_value=0.0,
             max_value=1.0,
             step=0.05,
             key="temperature",
-            help="Lower = more deterministic, Higher = more creative",
+            help=t("settings.help_temperature"),
         )
         st.number_input(
-            "Context Length (tokens)",
+            t("settings.label_context_length"),
             min_value=512,
             max_value=8192,
             step=512,
             key="context_length",
         )
         st.toggle(
-            "Enable OCR",
+            t("settings.label_enable_ocr"),
             key="tesseract_enabled",
-            help="Requires a working Tesseract installation",
+            help=t("settings.help_enable_ocr"),
         )
 
-    with st.expander("Storage", expanded=False):
+    with st.expander(t("settings.section_storage"), expanded=False):
         st.text_input(
-            "Database Path",
+            t("settings.label_database_path"),
             key="database_url",
         )
 
     action_col1, action_col2 = st.columns(2)
     with action_col1:
-        if st.button("Save Settings", use_container_width=True):
+        if st.button(t("settings.button_save"), use_container_width=True):
             _save_settings()
     with action_col2:
-        if st.button("Reset Defaults", use_container_width=True):
+        if st.button(t("settings.button_reset"), use_container_width=True):
             _reset_settings()

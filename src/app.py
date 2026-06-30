@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
-"""Offline AI Lecture Notes Organizer - Streamlit Application Entry Point."""
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Offline AI Lecture Notes Organizer - Streamlit Application Entry Point with multilingual support."""
+
+from __future__ import annotations
 
 import os
 import sys
@@ -20,14 +22,15 @@ from src.ui.pages.upload import render_upload_page
 from src.ui.pages.view_notes import render_view_notes
 from src.ui.theme import apply_theme
 from src.utils.config import load_config
+from src.utils.translations import t
 
 
-def init_session_state(config) -> None:
+def init_session_state(config: object) -> None:
     """Initialize Streamlit session state."""
     if "current_page" not in st.session_state:
         st.session_state.current_page = "Upload"
     requested_page = st.query_params.get("page")
-    valid_pages = {
+    valid_pages: set[str] = {
         "Upload",
         "View Notes",
         "Flashcards",
@@ -51,12 +54,15 @@ def init_session_state(config) -> None:
             "database_url": config.database_url,
             "cache_enabled": config.cache_enabled,
         }
+    # Initialize language preference
+    if "language" not in st.session_state:
+        st.session_state["language"] = "en"
 
 
 def main() -> None:
     """Application entry point."""
     st.set_page_config(
-        page_title="Lecture Notes Organizer",
+        page_title=t("app.title"),
         page_icon="🎓",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -88,7 +94,7 @@ def main() -> None:
     elif page == "Settings":
         render_settings(cfg)
         # Update config from session state
-        for key in [
+        for key in (
             "llm_backend",
             "temperature",
             "context_length",
@@ -97,7 +103,7 @@ def main() -> None:
             "ollama_model",
             "tesseract_path",
             "database_url",
-        ]:
+        ):
             if key in st.session_state:
                 cfg[key] = st.session_state[key]
     elif page == "System Status":

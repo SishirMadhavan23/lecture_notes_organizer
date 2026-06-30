@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# git-cliff configuration for automated changelog generation
+
+[changelog]
+header = "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n"
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {{ commit.message | upper_first }}{% if commit.breaking %} [breaking]{% endif %}
+{% endfor %}
+{% endfor %}
+"""
+footer = """
+---
+*This changelog was automatically generated using [git-cliff](https://github.com/orhun/git-cliff).*
+"""
+# Remove the leading whitespace from the template
+trim = true
+postprocess = []
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+# Regex to parse commit messages
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^refactor", group = "Refactor" },
+    { message = "^test", group = "Testing" },
+    { message = "^chore", group = "Chores" },
+    { message = "^perf", group = "Performance" },
+    { message = "^style", group = "Styling" },
+    { message = "^ci", group = "CI/CD" },
+    { message = "^build", group = "Build" },
+    { message = "^revert", group = "Revert" },
+]
+# Filter out commits that match these patterns
+filter_commits = []
+# Sort groups
+sort_groups = ["Features", "Bug Fixes", "Documentation", "Refactor", "Testing", "Performance", "Styling", "CI/CD", "Build", "Chores", "Revert"]

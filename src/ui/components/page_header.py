@@ -1,4 +1,5 @@
-"""Reusable page header component."""
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Reusable page header component with multilingual support."""
 
 from __future__ import annotations
 
@@ -6,7 +7,13 @@ import streamlit as st
 
 
 def render_page_header(title: str, description: str, eyebrow: str) -> None:
-    """Render a consistent academic page header."""
+    """Render a consistent academic page header.
+
+    Args:
+        title: Page title (already translated)
+        description: Page description (already translated)
+        eyebrow: Section/category label (already translated)
+    """
     st.markdown(
         f"""
         <section class="page-shell">

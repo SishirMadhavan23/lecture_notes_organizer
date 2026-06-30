@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+.git
+venv
+.env
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.pyc
+*.pyo
+.DS_Store
+.vscode
+.idea
+*.egg-info
+dist
+build
+htmlcov
+.coverage
+coverage.xml

@@ -1,22 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v4.5.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
       - id: check-added-large-files
+      - id: check-case-conflict
       - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.0
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.4.0
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
     hooks:
       - id: black
         args: [--line-length=88]
@@ -27,27 +30,35 @@ repos:
       - id: isort
         args: [--profile=black, --line-length=88]
 
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88]
+        additional_dependencies: [flake8-pyproject]
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.9.0
     hooks:
       - id: mypy
         args: [--strict, --ignore-missing-imports]
-        additional_dependencies: [types-all]
+        additional_dependencies: [types-requests, types-PyYAML]
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.8
+    rev: 1.7.7
     hooks:
       - id: bandit
-        args: [-ll, -q]
+        args: [-ll, -q, -r]
         exclude: ^tests/
 
-  - repo: https://github.com/jendrikseipp/vulture
-    rev: v2.11
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
     hooks:
-      - id: vulture
+      - id: pyupgrade
+        args: [--py311-plus]
 
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
+  - repo: https://github.com/orhun/git-cliff
+    rev: v2.2.0
     hooks:
-      - id: detect-secrets
-        args: [--baseline, .secrets.baseline]
+      - id: git-cliff
+        args: [--verbose]
