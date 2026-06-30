@@ -84,9 +84,8 @@ def ocr_pdf(
     try:
         images = convert_from_path(pdf_path, dpi=dpi)
         texts: list[str] = [
-    str(pytesseract.image_to_string(img, lang=lang).strip())
-    for img in images
-]
+            str(pytesseract.image_to_string(img, lang=lang).strip()) for img in images
+        ]
         return "\n\n".join(texts)
     except Exception as exc:
         raise OCRError(f"PDF OCR failed: {exc}") from exc

@@ -30,9 +30,7 @@ class AppConfig:
     tesseract_lang: str = "eng"
     tesseract_timeout: int = 60
     max_file_size_mb: int = 50
-    supported_formats: list[str] = field(
-    default_factory=lambda: ["pdf", "docx", "txt"]
-)
+    supported_formats: list[str] = field(default_factory=lambda: ["pdf", "docx", "txt"])
     cache_enabled: bool = True
     page_title: str = "Lecture Notes Organizer"
     config_filename: str = "app_config.json"
