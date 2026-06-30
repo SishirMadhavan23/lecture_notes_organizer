@@ -26,11 +26,15 @@ def render_status_card(
            target="_self" aria-label="Configure {escape(title)}">
             <div class="status-card__top">
                 <span class="status-card__icon" aria-hidden="true">{escape(icon)}</span>
-                <span class="status-badge status-badge--{safe_level}">{escape(status)}</span>
+                <span class="status-badge status-badge--{safe_level}">
+                    {escape(status)}
+                </span>
             </div>
             <div class="status-card__title">{escape(title)}</div>
             <div class="status-card__detail">{escape(detail)}</div>
-            <div class="status-card__action">Open configuration <span aria-hidden="true">-&gt;</span></div>
+            <div class="status-card__action">
+                Open configuration <span aria-hidden="true">-&gt;</span>
+            </div>
         </a>
         """,
         unsafe_allow_html=True,
@@ -39,13 +43,16 @@ def render_status_card(
 
 def render_stat_cards(stats: Iterable[Mapping[str, str]]) -> None:
     """Render a responsive row of processing statistics."""
-    cards = "".join(f"""
+    cards = "".join(
+        f"""
         <article class="stat-card">
             <div class="stat-card__label">{escape(item["label"])}</div>
             <div class="stat-card__value">{escape(item["value"])}</div>
             <div class="stat-card__hint">{escape(item.get("hint", ""))}</div>
         </article>
-        """ for item in stats)
+        """
+        for item in stats
+    )
     st.markdown(
         f'<section class="stats-grid">{cards}</section>', unsafe_allow_html=True
     )
@@ -82,7 +89,10 @@ def render_processing_stepper(active_step: int = 0, failed: bool = False) -> Non
             </div>
             """)
     st.markdown(
-        f'<section class="process-stepper" aria-label="Processing progress">{"".join(markup)}</section>',
+        (
+            f'<section class="process-stepper" '
+            f'aria-label="Processing progress">{"".join(markup)}</section>'
+        ),
         unsafe_allow_html=True,
     )
 

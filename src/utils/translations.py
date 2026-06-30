@@ -9,16 +9,15 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import streamlit as st
 
 logger = logging.getLogger(__name__)
 
 # Supported languages with their display names and locale codes
-LANGUAGES: Dict[str, Dict[str, str]] = {
+LANGUAGES: dict[str, dict[str, str]] = {
     "en": {"name": "English", "native_name": "English"},
     "te": {"name": "Telugu", "native_name": "తెలుగు"},
     "hi": {"name": "Hindi", "native_name": "हिन्दी"},
@@ -26,12 +25,14 @@ LANGUAGES: Dict[str, Dict[str, str]] = {
 
 DEFAULT_LANGUAGE = "en"
 
-_translations: Dict[str, Dict[str, str]] = {}
+_translations: dict[str, dict[str, str]] = {}
 
 
-def _load_translation_file(lang: str) -> Dict[str, str]:
+def _load_translation_file(lang: str) -> dict[str, str]:
     """Load a single translation JSON file from the translations directory."""
-    path = Path(__file__).resolve().parent.parent.parent / "translations" / f"{lang}.json"
+    path = (
+        Path(__file__).resolve().parent.parent.parent / "translations" / f"{lang}.json"
+    )
     if not path.exists():
         logger.warning("Translation file not found: %s", path)
         return {}
@@ -43,7 +44,7 @@ def _load_translation_file(lang: str) -> Dict[str, str]:
         return {}
 
 
-def _load_all_translations() -> Dict[str, Dict[str, str]]:
+def _load_all_translations() -> dict[str, dict[str, str]]:
     """Pre-load all translation files on first access."""
     global _translations
     if not _translations:
@@ -69,7 +70,7 @@ def set_language(lang: str) -> None:
         st.session_state["language"] = DEFAULT_LANGUAGE
 
 
-def t(key: str, default: Optional[str] = None) -> str:
+def t(key: str, default: str | None = None) -> str:
     """Translate a key into the currently selected language.
 
     Args:

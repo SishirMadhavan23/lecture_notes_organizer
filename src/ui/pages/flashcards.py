@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Flashcard review page generated from saved local note metadata with multilingual support."""
+"""Flashcard review page generated from local note metadata."""
 
 from __future__ import annotations
 
@@ -17,7 +17,9 @@ def _build_flashcards(notes: list[dict[str, Any]]) -> list[dict[str, str]]:
     """Build flashcards from saved notes."""
     cards: list[dict[str, str]] = []
     for note in notes:
-        title = note.get("title") or note.get("filename", t("note_card.label_untitled_note"))
+        title = note.get("title") or note.get(
+            "filename", t("note_card.label_untitled_note")
+        )
         summary = note.get("summary", "")
         points = note.get("important_points", [])
         questions = note.get("possible_exam_questions", [])
@@ -30,15 +32,17 @@ def _build_flashcards(notes: list[dict[str, Any]]) -> list[dict[str, str]]:
                 answer_parts.append(
                     t("flashcards.default_question", title=str(title))
                     + " "
-                                    + "; ".join(str(p) for p in points[:3])
+                    + "; ".join(str(p) for p in points[:3])
                 )
             cards.append(
                 {
                     "source": str(title),
-                    "front": str(question.get("text", str(question)) if isinstance(question, dict) else str(question)),
-                    "back": (
-                        " ".join(answer_parts) or t("flashcards.default_answer")
+                    "front": str(
+                        question.get("text", str(question))
+                        if isinstance(question, dict)
+                        else str(question)
                     ),
+                    "back": (" ".join(answer_parts) or t("flashcards.default_answer")),
                 }
             )
 
@@ -77,12 +81,17 @@ def render_flashcards(_: dict[str, Any]) -> None:
     card = cards[index]
 
     st.caption(
-        t("flashcards.card_count", current=index + 1, total=len(cards), source=card["source"])
+        t(
+            "flashcards.card_count",
+            current=index + 1,
+            total=len(cards),
+            source=card["source"],
+        )
     )
     st.markdown(
         f"""
         <section class="upload-preview">
-            <div class="section-label">{t('flashcards.label_question')}</div>
+            <div class="section-label">{t("flashcards.label_question")}</div>
             <p class="page-title" style="font-size: 1.2rem;">{escape(card["front"])}</p>
         </section>
         """,
@@ -93,7 +102,7 @@ def render_flashcards(_: dict[str, Any]) -> None:
         st.markdown(
             f"""
             <section class="upload-preview">
-                <div class="section-label">{t('flashcards.label_answer')}</div>
+                <div class="section-label">{t("flashcards.label_answer")}</div>
                 <p class="note-summary">{escape(card["back"])}</p>
             </section>
             """,

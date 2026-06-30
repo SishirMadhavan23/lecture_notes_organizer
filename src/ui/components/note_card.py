@@ -146,7 +146,8 @@ def _render_presentation_metadata_tab(note: dict[str, Any]) -> None:
     """Render PowerPoint-specific metadata."""
     presentation = _parse_presentation_details(note.get("raw_text", ""))
     st.markdown(
-        f"**Presentation title:** `{presentation['title'] or note.get('title') or 'Unknown'}`"
+        f"**Presentation title:** "
+        f"`{presentation['title'] or note.get('title') or 'Unknown'}`"
     )
     st.markdown(f"**Author:** `{presentation['author'] or 'Unknown'}`")
     st.markdown(f"**Number of slides:** `{presentation['slide_count'] or 0}`")
@@ -166,7 +167,8 @@ def _render_presentation_metadata_tab(note: dict[str, Any]) -> None:
         "Extracted locally with the offline PowerPoint parser and stored in SQLite."
     )
     st.write(
-        f"Speaker notes detected: {'Yes' if presentation['has_speaker_notes'] else 'No'}"
+        "Speaker notes detected: "
+        f"{'Yes' if presentation['has_speaker_notes'] else 'No'}"
     )
 
 
@@ -192,7 +194,9 @@ def _render_content_tabs(note: dict[str, Any]) -> None:
         st.markdown(f"**Difficulty:** {note.get('difficulty') or 'Intermediate'}")
         st.markdown(f"**Processed:** `{note.get('created_at', 'N/A')}`")
         st.markdown(
-            f"**File:** `{note.get('filename', 'N/A')} ({str(note.get('file_type', 'N/A')).upper()})`"
+            f"**File:** "
+            f"`{note.get('filename', 'N/A')} "
+            f"({str(note.get('file_type', 'N/A')).upper()})`"
         )
         st.write(note.get("summary") or "No summary available yet.")
 
@@ -223,7 +227,8 @@ def _render_content_tabs(note: dict[str, Any]) -> None:
     if "Slides" in tab_map:
         with tab_map["Slides"]:
             st.markdown(
-                f"**Presentation title:** {presentation['title'] or note.get('title') or 'Unknown'}"
+                f"**Presentation title:** "
+                f"{presentation['title'] or note.get('title') or 'Unknown'}"
             )
             st.markdown(f"**Author:** {presentation['author'] or 'Unknown'}")
             st.markdown(f"**Created date:** {presentation['created'] or 'Unknown'}")
@@ -273,10 +278,12 @@ def render_note_card(note: dict[str, Any], expanded: bool = False) -> None:
             meta_items.append(f'<span class="meta-pill">{escape(subject)}</span>')
         if difficulty:
             meta_items.append(
-                f'<span class="{_difficulty_tone(difficulty)}">{escape(difficulty)}</span>'
+                f'<span class="{_difficulty_tone(difficulty)}">'
+                f"{escape(difficulty)}</span>"
             )
         meta_items.append(
-            f'<span class="meta-pill">{escape(note.get("file_type", "N/A").upper())}</span>'
+            f'<span class="meta-pill">'
+            f'{escape(note.get("file_type", "N/A").upper())}</span>'
         )
 
         summary_text = summary[:300] + ("..." if len(summary) > 300 else "")
@@ -295,19 +302,27 @@ def render_note_card(note: dict[str, Any], expanded: bool = False) -> None:
                 {escape(title)}
             </h3>
             <div class="meta-row">{"".join(meta_items)}</div>
-            <p class="note-summary">{escape(summary_text) if summary_text else "No summary available yet."}</p>
+            <p class="note-summary">
+                {escape(summary_text) if summary_text else "No summary available yet."}
+            </p>
             """,
             unsafe_allow_html=True,
         )
 
         if topic_markup:
             st.markdown(
-                f'<div class="section-label">Topics</div><div class="badge-row">{topic_markup}</div>',
+                (
+                    f'<div class="section-label">Topics</div>'
+                    f'<div class="badge-row">{topic_markup}</div>'
+                ),
                 unsafe_allow_html=True,
             )
         if keyword_markup:
             st.markdown(
-                f'<div class="section-label">Keywords</div><div class="badge-row">{keyword_markup}</div>',
+                (
+                    f'<div class="section-label">Keywords</div>'
+                    f'<div class="badge-row">{keyword_markup}</div>'
+                ),
                 unsafe_allow_html=True,
             )
 

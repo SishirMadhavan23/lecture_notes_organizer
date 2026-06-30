@@ -50,7 +50,11 @@ class TestCleanText:
         """Test title extraction from filename when text has no title."""
         # First line is very long (>200 chars) so title falls back to filename
         text = (
-            "This is a very long first line that exceeds two hundred characters by a significant margin to force the title extraction function to skip it and fall back to the filename-based title extraction mechanism instead of using this as the title "
+            "This is a very long first line that exceeds two hundred "
+            "characters by a significant margin to force the title "
+            "extraction function to skip it and fall back to the "
+            "filename-based title extraction mechanism instead of using "
+            "this as the title "
             * 2
         )
         title = extract_title(text, filename="deep_learning_basics.pdf")

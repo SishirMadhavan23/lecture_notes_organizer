@@ -74,9 +74,22 @@ def get_theme_css() -> str:
 
     [data-testid="stAppViewContainer"] {{
         background:
-            radial-gradient(circle at top left, rgba(20, 184, 166, 0.14), transparent 30%),
-            radial-gradient(circle at top right, rgba(212, 167, 44, 0.10), transparent 24%),
-            linear-gradient(180deg, var(--lno-bg-alt) 0%, var(--lno-bg) 42%, #061014 100%);
+            radial-gradient(
+                circle at top left,
+                rgba(20, 184, 166, 0.14),
+                transparent 30%,
+            ),
+            radial-gradient(
+                circle at top right,
+                rgba(212, 167, 44, 0.10),
+                transparent 24%,
+            ),
+            linear-gradient(
+                180deg,
+                var(--lno-bg-alt) 0%,
+                var(--lno-bg) 42%,
+                #061014 100%,
+            );
         color: var(--lno-text);
     }}
 
@@ -111,7 +124,11 @@ def get_theme_css() -> str:
         padding: 1.4rem 1.5rem 1.2rem;
         border: 1px solid var(--lno-border);
         border-radius: 24px;
-        background: linear-gradient(180deg, rgba(20, 34, 38, 0.72), rgba(11, 20, 24, 0.62));
+        background: linear-gradient(
+            180deg,
+            rgba(20, 34, 38, 0.72),
+            rgba(11, 20, 24, 0.62),
+        );
         backdrop-filter: blur(18px);
         box-shadow: var(--lno-shadow);
     }}
@@ -146,7 +163,11 @@ def get_theme_css() -> str:
         padding: 1.25rem 1.35rem;
         border: 1px solid var(--lno-border);
         border-radius: 24px;
-        background: linear-gradient(180deg, rgba(17, 29, 33, 0.86), rgba(10, 19, 23, 0.68));
+        background: linear-gradient(
+            180deg,
+            rgba(17, 29, 33, 0.86),
+            rgba(10, 19, 23, 0.68),
+        );
         box-shadow: var(--lno-shadow);
         backdrop-filter: blur(16px);
     }}
@@ -296,7 +317,11 @@ def get_theme_css() -> str:
     [data-testid="stVerticalBlockBorderWrapper"] {{
         border: 1px solid var(--lno-border) !important;
         border-radius: 22px !important;
-        background: linear-gradient(180deg, var(--lno-surface) 0%, var(--lno-surface-soft) 100%);
+        background: linear-gradient(
+            180deg,
+            var(--lno-surface) 0%,
+            var(--lno-surface-soft) 100%,
+        );
         box-shadow: var(--lno-shadow);
         backdrop-filter: blur(20px);
     }}
@@ -305,7 +330,11 @@ def get_theme_css() -> str:
         padding: 0.9rem 1rem;
         border: 1px solid var(--lno-border);
         border-radius: 20px;
-        background: linear-gradient(180deg, rgba(17, 29, 33, 0.88), rgba(11, 20, 24, 0.72));
+        background: linear-gradient(
+            180deg,
+            rgba(17, 29, 33, 0.88),
+            rgba(11, 20, 24, 0.72),
+        );
         box-shadow: var(--lno-shadow);
     }}
 
@@ -325,7 +354,11 @@ def get_theme_css() -> str:
     [data-testid="stBaseButton-primary"] {{
         border-radius: 999px !important;
         border: 1px solid rgba(20, 184, 166, 0.2) !important;
-        background: linear-gradient(180deg, rgba(19, 63, 67, 0.96), rgba(11, 44, 47, 0.94)) !important;
+        background: linear-gradient(
+            180deg,
+            rgba(19, 63, 67, 0.96),
+            rgba(11, 44, 47, 0.94),
+        ) !important;
         color: var(--lno-text) !important;
         min-height: 2.8rem;
         padding: 0.55rem 1rem !important;
@@ -337,7 +370,11 @@ def get_theme_css() -> str:
     [data-testid="stBaseButton-secondary"]:hover,
     [data-testid="stBaseButton-primary"]:hover {{
         transform: translateY(-1px);
-        background: linear-gradient(180deg, rgba(24, 88, 93, 0.98), rgba(13, 57, 60, 0.96)) !important;
+        background: linear-gradient(
+            180deg,
+            rgba(24, 88, 93, 0.98),
+            rgba(13, 57, 60, 0.96),
+        ) !important;
         box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
     }}
 
@@ -363,14 +400,25 @@ def get_theme_css() -> str:
         border-style: dashed !important;
         border-width: 2px !important;
         background:
-            linear-gradient(180deg, rgba(15, 31, 35, 0.86), rgba(9, 20, 24, 0.76)) !important;
-        transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+            linear-gradient(
+                180deg,
+                rgba(15, 31, 35, 0.86),
+                rgba(9, 20, 24, 0.76),
+            ) !important;
+        transition:
+            border-color 160ms ease,
+            background 160ms ease,
+            transform 160ms ease;
     }}
 
     [data-testid="stFileUploaderDropzone"]:hover {{
         border-color: rgba(20, 184, 166, 0.42) !important;
         background:
-            linear-gradient(180deg, rgba(17, 37, 42, 0.92), rgba(10, 24, 29, 0.82)) !important;
+            linear-gradient(
+                180deg,
+                rgba(17, 37, 42, 0.92),
+                rgba(10, 24, 29, 0.82),
+            ) !important;
         transform: translateY(-1px);
     }}
 
@@ -397,7 +445,11 @@ def get_theme_css() -> str:
     }}
 
     .stProgress > div > div > div > div {{
-        background: linear-gradient(90deg, var(--lno-primary), var(--lno-accent)) !important;
+        background: linear-gradient(
+            90deg,
+            var(--lno-primary),
+            var(--lno-accent),
+        ) !important;
         border-radius: 999px;
     }}
 
@@ -437,7 +489,10 @@ def get_theme_css() -> str:
         border: 1px solid transparent;
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.03);
-        transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+        transition: \
+            background 160ms ease,
+            border-color 160ms ease,
+            transform 160ms ease;
     }}
 
     [data-testid="stSidebar"] .stRadio label[data-baseweb="radio"]:hover {{
@@ -489,11 +544,18 @@ def get_theme_css() -> str:
         flex-direction: column;
         border: 1px solid var(--lno-border);
         border-radius: 22px;
-        background: linear-gradient(180deg, var(--lno-surface), var(--lno-surface-soft));
+        background: linear-gradient(
+            180deg,
+            var(--lno-surface),
+            var(--lno-surface-soft),
+        );
         color: var(--lno-text);
         text-decoration: none !important;
         box-shadow: var(--lno-shadow);
-        transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+        transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            box-shadow 180ms ease;
     }}
 
     .status-card:hover {{
@@ -592,7 +654,11 @@ def get_theme_css() -> str:
         padding: 1.05rem;
         border: 1px solid var(--lno-border);
         border-radius: 20px;
-        background: linear-gradient(180deg, var(--lno-surface), var(--lno-surface-soft));
+        background: linear-gradient(
+            180deg,
+            var(--lno-surface),
+            var(--lno-surface-soft),
+        );
         box-shadow: var(--lno-shadow);
     }}
 
@@ -718,7 +784,12 @@ def get_theme_css() -> str:
         text-transform: uppercase;
     }}
 
-    .app-footer__chips {{ display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: flex-end; }}
+    .app-footer__chips {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        justify-content: flex-end;
+    }}
     .footer-chip {{
         padding: 0.3rem 0.65rem;
         border: 1px solid var(--lno-border);
@@ -794,7 +865,10 @@ def get_theme_css() -> str:
 
     @media (max-width: 480px) {{
         .stats-grid {{ grid-template-columns: 1fr; }}
-        [data-testid="stFileUploaderDropzone"] {{ min-height: 9rem; padding: 1.5rem 1rem; }}
+        [data-testid="stFileUploaderDropzone"] {{
+            min-height: 9rem;
+            padding: 1.5rem 1rem;
+        }}
     }}
     </style>
     """

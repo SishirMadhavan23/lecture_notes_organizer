@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Offline AI Lecture Notes Organizer - Streamlit Application Entry Point with multilingual support."""
+"""Offline AI Lecture Notes Organizer entry point with multilingual support."""
 
 from __future__ import annotations
 

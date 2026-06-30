@@ -84,7 +84,9 @@ def _render_status_panels() -> None:
                 message = (
                     t("settings.status_connected")
                     if tesseract_status.get("ok")
-                    else tesseract_status.get("message", t("settings.status_not_tested"))
+                    else tesseract_status.get(
+                        "message", t("settings.status_not_tested")
+                    )
                 )
                 level = st.success if tesseract_status.get("ok") else st.error
                 level(t("settings.status_tesseract_connected", message=message))
@@ -105,21 +107,17 @@ def _render_status_panels() -> None:
     with col2:
         with st.container(border=True):
             st.markdown(f"**{t('settings.label_version_info')}**")
-            tesseract_version = (
-                tesseract_status.get("version", t("common.not_available"))
-                or t("common.not_available")
-            )
-            ollama_version = (
-                ollama_status.get("version", t("common.not_available"))
-                or t("common.not_available")
-            )
+            tesseract_version = tesseract_status.get(
+                "version", t("common.not_available")
+            ) or t("common.not_available")
+            ollama_version = ollama_status.get(
+                "version", t("common.not_available")
+            ) or t("common.not_available")
             st.caption(t("settings.label_tesseract_version", version=tesseract_version))
             st.caption(t("settings.label_ollama_version", version=ollama_version))
             models = ollama_status.get("models", [])
             if models:
-                st.caption(
-                    t("settings.label_model_status", count=len(models))
-                )
+                st.caption(t("settings.label_model_status", count=len(models)))
             else:
                 st.caption(t("settings.label_no_models"))
 

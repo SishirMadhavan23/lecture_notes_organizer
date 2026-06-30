@@ -14,8 +14,8 @@ def render_sidebar() -> None:
         st.markdown(
             f"""
             <section class="sidebar-brand">
-                <p class="sidebar-title">{t('app.title')}</p>
-                <p class="sidebar-subtitle">{t('app.subtitle')}</p>
+                <p class="sidebar-title">{t("app.title")}</p>
+                <p class="sidebar-subtitle">{t("app.subtitle")}</p>
             </section>
             """,
             unsafe_allow_html=True,
@@ -51,7 +51,7 @@ def render_sidebar() -> None:
         st.markdown(
             f"""
             <p class="sidebar-footer">
-                {t('sidebar.footer').replace(chr(10), '<br>')}
+                {t("sidebar.footer").replace(chr(10), "<br>")}
             </p>
             """,
             unsafe_allow_html=True,
