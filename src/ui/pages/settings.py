@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import streamlit as st
 
-from src.ai.model_manager import is_llama_cpp_available
 from src.ui.components.page_header import render_page_header
 from src.utils.config import (
     AppConfig,
@@ -31,18 +30,13 @@ OLLAMA_STATUS_KEY = "settings_ollama_status"
 OLLAMA_MODELS_KEY = "settings_ollama_models"
 
 
-def _ensure_settings_state(config: Dict[str, Any]) -> None:
+def _ensure_settings_state(config: dict[str, Any]) -> None:
     """Initialize settings-related session state."""
     st.session_state.setdefault("llm_backend", config.get("llm_backend", "ollama"))
     st.session_state.setdefault(
         "ollama_base_url", config.get("ollama_base_url", "http://localhost:11434")
     )
-    st.session_state.setdefault(
-        "ollama_model", config.get("ollama_model", "phi3:mini")
-    )
-    st.session_state.setdefault(
-        "llama_cpp_model_path", config.get("llama_cpp_model_path", "")
-    )
+    st.session_state.setdefault("ollama_model", config.get("ollama_model", "phi3:mini"))
     st.session_state.setdefault("temperature", config.get("temperature", 0.1))
     st.session_state.setdefault("context_length", config.get("context_length", 4096))
     st.session_state.setdefault(
@@ -58,8 +52,8 @@ def _ensure_settings_state(config: Dict[str, Any]) -> None:
     current_model = st.session_state.get("ollama_model", "phi3:mini")
     if OLLAMA_MODELS_KEY not in st.session_state:
         detected_models = get_ollama_models(st.session_state.get("ollama_base_url", ""))
-        st.session_state[OLLAMA_MODELS_KEY] = (
-            detected_models or ([current_model] if current_model else [])
+        st.session_state[OLLAMA_MODELS_KEY] = detected_models or (
+            [current_model] if current_model else []
         )
     st.session_state.setdefault(TESSERACT_STATUS_KEY, {})
     st.session_state.setdefault(OLLAMA_STATUS_KEY, {})
@@ -86,7 +80,9 @@ def _render_status_panels() -> None:
             st.markdown("**Connection Status**")
             if tesseract_status:
                 message = (
-                    "Connected" if tesseract_status.get("ok") else tesseract_status.get("message", "Not tested")
+                    "Connected"
+                    if tesseract_status.get("ok")
+                    else tesseract_status.get("message", "Not tested")
                 )
                 level = st.success if tesseract_status.get("ok") else st.error
                 level(f"Tesseract: {message}")
@@ -107,12 +103,14 @@ def _render_status_panels() -> None:
     with col2:
         with st.container(border=True):
             st.markdown("**Version Information**")
-            st.caption(
-                f"Tesseract: {tesseract_status.get('version', 'Unavailable') or 'Unavailable'}"
+            tesseract_version = (
+                tesseract_status.get("version", "Unavailable") or "Unavailable"
             )
-            st.caption(
-                f"Ollama: {ollama_status.get('version', 'Unavailable') or 'Unavailable'}"
+            ollama_version = (
+                ollama_status.get("version", "Unavailable") or "Unavailable"
             )
+            st.caption(f"Tesseract: {tesseract_version}")
+            st.caption(f"Ollama: {ollama_version}")
             models = ollama_status.get("models", [])
             if models:
                 st.caption(f"Model Status: {len(models)} installed model(s) detected")
@@ -133,10 +131,7 @@ def _save_settings() -> None:
             "ollama_base_url", current.ollama_base_url
         ),
         ollama_model=st.session_state.get("ollama_model", current.ollama_model),
-        llama_cpp_model_path=st.session_state.get(
-            "llama_cpp_model_path", current.llama_cpp_model_path
-        ),
-        llm_backend=st.session_state.get("llm_backend", current.llm_backend),
+        llm_backend="ollama",
         context_length=int(
             st.session_state.get("context_length", current.context_length)
         ),
@@ -160,7 +155,6 @@ def _save_settings() -> None:
             "llm_backend": updated.llm_backend,
             "ollama_base_url": updated.ollama_base_url,
             "ollama_model": updated.ollama_model,
-            "llama_cpp_model_path": updated.llama_cpp_model_path,
             "temperature": updated.temperature,
             "context_length": updated.context_length,
             "tesseract_enabled": updated.tesseract_enabled,
@@ -177,7 +171,6 @@ def _reset_settings() -> None:
     st.session_state["llm_backend"] = defaults.llm_backend
     st.session_state["ollama_base_url"] = defaults.ollama_base_url
     st.session_state["ollama_model"] = defaults.ollama_model
-    st.session_state["llama_cpp_model_path"] = defaults.llama_cpp_model_path or ""
     st.session_state["temperature"] = defaults.temperature
     st.session_state["context_length"] = defaults.context_length
     st.session_state["tesseract_enabled"] = defaults.tesseract_enabled
@@ -191,7 +184,6 @@ def _reset_settings() -> None:
             "llm_backend": defaults.llm_backend,
             "ollama_base_url": defaults.ollama_base_url,
             "ollama_model": defaults.ollama_model,
-            "llama_cpp_model_path": defaults.llama_cpp_model_path,
             "temperature": defaults.temperature,
             "context_length": defaults.context_length,
             "tesseract_enabled": defaults.tesseract_enabled,
@@ -203,7 +195,7 @@ def _reset_settings() -> None:
     st.rerun()
 
 
-def render_settings(config: Dict[str, Any]) -> None:
+def render_settings(config: dict[str, Any]) -> None:
     """Render the settings page."""
     _ensure_settings_state(config)
 
@@ -240,7 +232,9 @@ def render_settings(config: Dict[str, Any]) -> None:
                     st.session_state["tesseract_path"] = detected_path
                     st.success(f"Detected Tesseract at {detected_path}")
                 else:
-                    st.warning("No Tesseract installation detected in common locations.")
+                    st.warning(
+                        "No Tesseract installation detected in common locations."
+                    )
         with t_col3:
             if st.button("Test Tesseract", use_container_width=True):
                 st.session_state[TESSERACT_STATUS_KEY] = test_tesseract_connection(
@@ -266,7 +260,9 @@ def render_settings(config: Dict[str, Any]) -> None:
                     _store_models(models, st.session_state.get("ollama_model", ""))
                     st.success("Ollama server detected.")
                 else:
-                    st.error("Unable to detect an Ollama server at the configured host.")
+                    st.error(
+                        "Unable to detect an Ollama server at the configured host."
+                    )
         with refresh_col:
             if st.button("Refresh Models", use_container_width=True):
                 models = get_ollama_models(host)
@@ -282,7 +278,10 @@ def render_settings(config: Dict[str, Any]) -> None:
                     st.session_state.get("ollama_model", ""),
                 )
                 st.session_state[OLLAMA_STATUS_KEY] = result
-                _store_models(result.get("models", []), st.session_state.get("ollama_model", ""))
+                _store_models(
+                    result.get("models", []),
+                    st.session_state.get("ollama_model", ""),
+                )
 
         detected_models = st.session_state.get(OLLAMA_MODELS_KEY, [])
         current_model = st.session_state.get("ollama_model", "phi3:mini")
@@ -295,7 +294,11 @@ def render_settings(config: Dict[str, Any]) -> None:
         st.selectbox(
             "Model Dropdown",
             options=model_options,
-            index=model_options.index(current_model) if current_model in model_options else 0,
+            index=(
+                model_options.index(current_model)
+                if current_model in model_options
+                else 0
+            ),
             key="ollama_model",
             disabled=model_options == ["No models detected"],
             help="Detected from `ollama list` or the Ollama API.",
@@ -304,25 +307,8 @@ def render_settings(config: Dict[str, Any]) -> None:
         _render_status_panels()
 
     with st.expander("Processing Preferences", expanded=True):
-        backend = st.selectbox(
-            "LLM Backend",
-            options=["ollama", "llama.cpp"],
-            index=0 if st.session_state.get("llm_backend", "ollama") == "ollama" else 1,
-            key="llm_backend",
-            help="Ollama: easier setup. llama.cpp: direct GGUF support.",
-        )
-
-        if backend == "llama.cpp":
-            st.text_input(
-                "GGUF Model Path",
-                key="llama_cpp_model_path",
-                help="Full path to the .gguf model file",
-            )
-            model_path = st.session_state.get("llama_cpp_model_path", "")
-            if model_path and is_llama_cpp_available(model_path):
-                st.success("Model file found")
-            elif model_path:
-                st.error("Model file not found")
+        st.session_state["llm_backend"] = "ollama"
+        st.info("AI generation uses local Ollama only. No cloud inference is used.")
 
         st.slider(
             "Temperature",

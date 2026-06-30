@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-30
+
+### Added
+- Flashcards page generated from existing local note metadata
+- Web documentation for local installation, offline runtime, Ollama, Tesseract, and troubleshooting
+- Web testing report for the offline Streamlit workflow
+
+### Notes
+- The project remains a Streamlit web application
+- AI generation is configured for local Ollama only; no cloud inference APIs are used
+
 ## [0.2.0] - 2026-06-29
 
 ### Added
@@ -15,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text preprocessing: HTML stripping, unicode normalization, whitespace collapse
 - Title extraction from content (markdown headings, first line) or filename
 - Text chunking with sentence-aware boundaries for LLM processing
-- Local LLM integration with Ollama (primary) and llama.cpp (fallback)
+- Local LLM integration with Ollama
 - Structured JSON generation matching required schema
 - Graceful fallback generation when AI models are unavailable
 - SQLite database with SQLAlchemy ORM

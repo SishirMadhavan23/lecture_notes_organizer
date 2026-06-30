@@ -17,8 +17,8 @@ addressed by the maintainers.
 
 ## Security Considerations
 
-- The application makes no network calls
+- The application makes no external network calls
 - User documents are processed only in memory
 - SQLite database is stored locally with no network exposure
-- AI models run locally via Ollama or llama.cpp
+- AI models run locally via Ollama
 - No user data is ever transmitted

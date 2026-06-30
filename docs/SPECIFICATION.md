@@ -20,7 +20,7 @@
 
 ### FR3: AI Processing
 - FR3.1: Connect to local Ollama (Phi-3 Mini / Qwen2.5)
-- FR3.2: Fall back to llama.cpp
+- FR3.2: Use only local Ollama for model inference
 - FR3.3: Generate structured JSON matching schema
 - FR3.4: Handle model unavailability gracefully
 - FR3.5: Cancellable long-running inference
@@ -87,7 +87,7 @@ Table: fts_notes (FTS5 virtual: title, subject, topics, keywords, content)
 - AI quality varies by model
 - Large PDFs may cause memory pressure
 - CPU inference 30-120s per document
-- GGUF models are 2-8GB
+- Local Ollama models require enough disk and memory for CPU inference
 
 ## 8. Mitigations
 
