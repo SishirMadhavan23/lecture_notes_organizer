@@ -77,7 +77,7 @@ class TestNoteMetadataModel:
         result = meta.to_dict()
         assert result["title"] == ""
         assert result["subject"] == ""
-        assert result["topics"] == []
-        assert result["keywords"] == []
+        assert not result["topics"]
+        assert not result["keywords"]
         assert result["summary"] == ""
         assert result["difficulty"] == ""

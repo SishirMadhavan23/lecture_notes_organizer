@@ -21,11 +21,11 @@ from src.ui.pages.system_status import render_system_status
 from src.ui.pages.upload import render_upload_page
 from src.ui.pages.view_notes import render_view_notes
 from src.ui.theme import apply_theme
-from src.utils.config import load_config
+from src.utils.config import AppConfig, load_config
 from src.utils.translations import t
 
 
-def init_session_state(config: object) -> None:
+def init_session_state(config: AppConfig) -> None:
     """Initialize Streamlit session state."""
     if "current_page" not in st.session_state:
         st.session_state.current_page = "Upload"

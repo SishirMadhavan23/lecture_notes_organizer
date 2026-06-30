@@ -204,7 +204,7 @@ def save_document(
         )
         session.commit()
 
-        _sync_fts_row(document.id, filename, cleaned_text, note_metadata)
+        _sync_fts_row(int(document.id), filename, cleaned_text, note_metadata)
         return int(document.id)
     except SQLAlchemyError as exc:
         session.rollback()
@@ -341,18 +341,14 @@ def get_stats() -> dict[str, Any]:
     engine = get_engine()
     session = get_session(engine)
     try:
-        total_documents = session.scalar(select(func.count(Document.id))) or 0
-        processed = (
-            session.scalar(
-                select(func.count(Document.id)).where(Document.status == "processed")
-            )
-            or 0
+        total_documents = len(session.scalars(select(Document.id)).all())
+        processed = len(
+            session.scalars(
+                select(Document.id).where(Document.status == "processed")
+            ).all()
         )
-        errors = (
-            session.scalar(
-                select(func.count(Document.id)).where(Document.status == "error")
-            )
-            or 0
+        errors = len(
+            session.scalars(select(Document.id).where(Document.status == "error")).all()
         )
     except SQLAlchemyError as exc:
         raise StorageError(f"Failed to collect database stats: {exc}") from exc

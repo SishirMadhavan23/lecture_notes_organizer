@@ -38,7 +38,10 @@ def get_theme_css() -> str:
     """Return the global CSS for the academic dark theme."""
     return f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+    @import url(
+        'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:'
+        'wght@400;500;600;700&display=swap'
+    );
 
     :root {{
         --lno-primary: {THEME["primary"]};

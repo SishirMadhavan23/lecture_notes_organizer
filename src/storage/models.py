@@ -6,9 +6,11 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, create_engine
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Base class for SQLAlchemy ORM models."""
 
 
 class Document(Base):
@@ -63,18 +65,22 @@ class NoteMetadata(Base):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert metadata to dictionary matching output schema."""
+        topics_value = str(self.topics or "[]")
+        keywords_value = str(self.keywords or "[]")
+        important_points_value = str(self.important_points or "[]")
+        possible_exam_questions_value = str(self.possible_exam_questions or "[]")
         return {
             "title": self.title or "",
             "subject": self.subject or "",
-            "topics": json.loads(self.topics) if self.topics else [],
-            "keywords": json.loads(self.keywords) if self.keywords else [],
+            "topics": json.loads(topics_value) if topics_value else [],
+            "keywords": json.loads(keywords_value) if keywords_value else [],
             "summary": self.summary or "",
             "important_points": (
-                json.loads(self.important_points) if self.important_points else []
+                json.loads(important_points_value) if important_points_value else []
             ),
             "possible_exam_questions": (
-                json.loads(self.possible_exam_questions)
-                if self.possible_exam_questions
+                json.loads(possible_exam_questions_value)
+                if possible_exam_questions_value
                 else []
             ),
             "difficulty": self.difficulty or "",

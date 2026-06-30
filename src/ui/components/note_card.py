@@ -283,7 +283,7 @@ def render_note_card(note: dict[str, Any], expanded: bool = False) -> None:
             )
         meta_items.append(
             f'<span class="meta-pill">'
-            f'{escape(note.get("file_type", "N/A").upper())}</span>'
+            f"{escape(note.get('file_type', 'N/A').upper())}</span>"
         )
 
         summary_text = summary[:300] + ("..." if len(summary) > 300 else "")

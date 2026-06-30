@@ -18,10 +18,10 @@ def extract_text_from_docx(file_path: str) -> str:
     """
     try:
         from docx import Document
-    except ImportError:
+    except ImportError as exc:
         raise ExtractionError(
             "python-docx is not installed. Install it with: pip install python-docx"
-        )
+        ) from exc
     try:
         doc = Document(file_path)
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]

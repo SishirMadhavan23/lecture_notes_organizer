@@ -19,10 +19,10 @@ def extract_text_from_pdf(file_path: str, page_limit: int | None = None) -> str:
     """
     try:
         import fitz
-    except ImportError:
+    except ImportError as exc:
         raise ExtractionError(
             "PyMuPDF (fitz) is not installed. Install it with: pip install PyMuPDF"
-        )
+        ) from exc
 
     try:
         doc = fitz.open(file_path)

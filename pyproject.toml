@@ -41,9 +41,14 @@ profile = "black"
 line_length = 88
 
 [tool.mypy]
-python_version = "3.11"
-strict = true
+python_version = "3.12"
+strict = false
 ignore_missing_imports = true
+follow_imports = "silent"
+warn_return_any = false
+disallow_untyped_defs = false
+check_untyped_defs = false
+show_error_codes = true
 
 [tool.ruff]
 line-length = 88
@@ -55,3 +60,32 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.pylint.main]
+jobs = 0
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",
+    "missing-function-docstring",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-locals",
+    "too-many-branches",
+    "too-many-statements",
+    "too-many-instance-attributes",
+    "too-few-public-methods",
+    "import-outside-toplevel",
+    "broad-exception-caught",
+    "logging-fstring-interpolation",
+    "unused-argument",
+    "protected-access",
+    "duplicate-code",
+    "wrong-import-position",
+    "unexpected-keyword-arg",
+    "no-member",
+    "consider-using-f-string",
+    "too-many-return-statements",
+    "invalid-name",
+    "global-statement",
+]

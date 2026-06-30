@@ -216,7 +216,7 @@ def _generate_fallback(text: str, config: dict[str, Any]) -> dict[str, Any]:
     words_lower = [
         w.lower().strip(".,;:!?()[]{}'\"") for w in words if w.isalpha() and len(w) > 3
     ]
-    freq = {}
+    freq: dict[str, int] = {}
     for w in words_lower:
         if w not in stop_words:
             freq[w] = freq.get(w, 0) + 1

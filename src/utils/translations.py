@@ -46,7 +46,6 @@ def _load_translation_file(lang: str) -> dict[str, str]:
 
 def _load_all_translations() -> dict[str, dict[str, str]]:
     """Pre-load all translation files on first access."""
-    global _translations
     if not _translations:
         for lang in LANGUAGES:
             _translations[lang] = _load_translation_file(lang)
@@ -70,12 +69,13 @@ def set_language(lang: str) -> None:
         st.session_state["language"] = DEFAULT_LANGUAGE
 
 
-def t(key: str, default: str | None = None) -> str:
+def t(key: str, default: str | None = None, **kwargs: Any) -> str:
     """Translate a key into the currently selected language.
 
     Args:
         key: The translation key (dot-notation supported, e.g. 'nav.upload')
         default: Fallback text if key is not found
+        kwargs: Optional placeholder values for string interpolation
 
     Returns:
         The translated string or the default/fallback key
@@ -94,6 +94,11 @@ def t(key: str, default: str | None = None) -> str:
             break
 
     if value is not None and isinstance(value, str):
+        if kwargs:
+            try:
+                return value.format(**kwargs)
+            except (KeyError, IndexError, ValueError):
+                return value
         return value
 
     # Fallback to English
@@ -107,6 +112,11 @@ def t(key: str, default: str | None = None) -> str:
                 value = None
                 break
         if value is not None and isinstance(value, str):
+            if kwargs:
+                try:
+                    return value.format(**kwargs)
+                except (KeyError, IndexError, ValueError):
+                    return value
             return value
 
     return default or key

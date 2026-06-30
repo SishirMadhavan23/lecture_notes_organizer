@@ -40,10 +40,10 @@ def ocr_image(
     try:
         import pytesseract
         from PIL import Image
-    except ImportError:
+    except ImportError as exc:
         raise OCRError(
             "pytesseract/Pillow not installed. Install: pip install pytesseract Pillow"
-        )
+        ) from exc
     resolved_path = _resolve_tesseract_path(tesseract_path)
     if resolved_path:
         pytesseract.pytesseract.tesseract_cmd = resolved_path
@@ -70,11 +70,11 @@ def ocr_pdf(
     try:
         import pytesseract
         from pdf2image import convert_from_path
-    except ImportError:
+    except ImportError as exc:
         raise OCRError(
             "pytesseract/pdf2image not installed. "
             "Install: pip install pytesseract pdf2image Pillow"
-        )
+        ) from exc
     resolved_path = _resolve_tesseract_path(tesseract_path)
     if resolved_path:
         pytesseract.pytesseract.tesseract_cmd = resolved_path

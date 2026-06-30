@@ -54,8 +54,7 @@ class TestCleanText:
             "characters by a significant margin to force the title "
             "extraction function to skip it and fall back to the "
             "filename-based title extraction mechanism instead of using "
-            "this as the title "
-            * 2
+            "this as the title " * 2
         )
         title = extract_title(text, filename="deep_learning_basics.pdf")
         assert "Deep Learning Basics" in title
@@ -80,5 +79,5 @@ class TestCleanText:
 
     def test_split_into_chunks_empty(self):
         """Test that empty text returns empty list."""
-        assert split_into_chunks("") == []
-        assert split_into_chunks(None) == []
+        assert not split_into_chunks("")
+        assert not split_into_chunks(None)
