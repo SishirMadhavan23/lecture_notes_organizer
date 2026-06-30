@@ -43,16 +43,13 @@ def render_status_card(
 
 def render_stat_cards(stats: Iterable[Mapping[str, str]]) -> None:
     """Render a responsive row of processing statistics."""
-    cards = "".join(
-        f"""
+    cards = "".join(f"""
         <article class="stat-card">
             <div class="stat-card__label">{escape(item["label"])}</div>
             <div class="stat-card__value">{escape(item["value"])}</div>
             <div class="stat-card__hint">{escape(item.get("hint", ""))}</div>
         </article>
-        """
-        for item in stats
-    )
+        """ for item in stats)
     st.markdown(
         f'<section class="stats-grid">{cards}</section>', unsafe_allow_html=True
     )
