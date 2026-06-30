@@ -4,7 +4,7 @@
 import json
 import logging
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -25,7 +25,6 @@ def is_ollama_available(base_url: str | None = None) -> bool:
         return False
 
 
-<<<<<<< HEAD
 def is_llama_cpp_available(model_path: Optional[str] = None) -> bool:
     """Check if llama.cpp model file exists."""
     if not model_path:
@@ -81,8 +80,6 @@ def _pack_study_items(result: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-=======
->>>>>>> 5267e80ae01d456e65d3d2d9214a89eeca487672
 def generate_structured_notes(
     text: str,
     config: dict[str, Any] | None = None,
@@ -147,21 +144,27 @@ def _parse_json_response(response_text: str, original_text: str) -> dict[str, An
     """Parse JSON from LLM response with fallback."""
     import re
 
-    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response_text, re.DOTALL)
+    json_match = re.search(
+        r"```(?:json)?\s*(\{.*?\})\s*```",
+        response_text,
+        re.DOTALL,
+    )
+
     if not json_match:
-        json_match = re.search(r"\{[^{}]*\"title\"[^{}]*\}", response_text, re.DOTALL)
+        json_match = re.search(
+            r"\{[^{}]*\"title\"[^{}]*\}",
+            response_text,
+            re.DOTALL,
+        )
+
     if json_match:
         try:
             result = json.loads(json_match.group(1))
-<<<<<<< HEAD
-            result["created_at"] = datetime.now(timezone.utc).isoformat()
-            return _pack_study_items(result)
-=======
             result["created_at"] = datetime.now(UTC).isoformat()
-            return result
->>>>>>> 5267e80ae01d456e65d3d2d9214a89eeca487672
+            return _pack_study_items(result)
         except (json.JSONDecodeError, KeyError):
             pass
+
     return _generate_fallback(original_text, {})
 
 
@@ -245,16 +248,9 @@ def _generate_fallback(text: str, config: dict[str, Any]) -> dict[str, Any]:
         "topics": ["Lecture Content"],
         "keywords": keywords,
         "summary": text[:500].strip() + ("..." if len(text) > 500 else ""),
-<<<<<<< HEAD
         "important_points": important_points,
         "possible_exam_questions": exam_questions + flashcards,
         "flashcards": flashcards,
-=======
-        "important_points": [
-            lines[i] for i in range(min(5, len(lines))) if len(lines[i]) > 20
-        ],
-        "possible_exam_questions": [],
->>>>>>> 5267e80ae01d456e65d3d2d9214a89eeca487672
         "difficulty": difficulty,
         "created_at": datetime.now(UTC).isoformat(),
     }
