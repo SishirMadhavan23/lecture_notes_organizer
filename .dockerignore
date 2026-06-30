@@ -1,0 +1,55 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+.gitlab-ci.yml
+.pre-commit-config.yaml
+.runner_system_id
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
+.env
+*.whl
+dist/
+build/
+
+# Data
+data/
+logs/
+models/
+sample_data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+*.report
+
+# Secrets
+.secrets.baseline
+.secrets
+
+# Documentation
+docs/
+
+# Docker
+Dockerfile
+.dockerignore

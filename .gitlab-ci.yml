@@ -1,6 +1,9 @@
 stages:
+  - format
   - lint
+  - type_check
   - test
+  - coverage
   - security
 
 default:
@@ -19,6 +22,17 @@ cache:
 before_script:
   - python -m pip install --upgrade pip
   - pip install -r requirements.txt
+
+# ── Format Stage ──────────────────────────────────────────────
+
+ruff-format:
+  stage: format
+  script:
+    - pip install ruff
+    - ruff format --check --line-length=88 src/ tests/
+  allow_failure: false
+
+# ── Lint Stage ────────────────────────────────────────────────
 
 ruff:
   stage: lint
@@ -41,12 +55,16 @@ isort:
     - isort --check-only --profile=black --line-length=88 src/ tests/
   allow_failure: false
 
+# ── Type Check Stage ──────────────────────────────────────────
+
 mypy:
-  stage: lint
+  stage: type_check
   script:
     - pip install mypy
     - mypy --strict --ignore-missing-imports src/
   allow_failure: true
+
+# ── Test Stage ────────────────────────────────────────────────
 
 pytest:
   stage: test
@@ -57,6 +75,21 @@ pytest:
     paths:
       - htmlcov/
     expire_in: 30 days
+
+# ── Coverage Stage ────────────────────────────────────────────
+
+coverage:
+  stage: coverage
+  script:
+    - pip install pytest pytest-cov
+    - pytest --cov=src/ --cov-report=term --cov-report=html --cov-fail-under=80 tests/
+  allow_failure: true
+  artifacts:
+    paths:
+      - htmlcov/
+    expire_in: 30 days
+
+# ── Security Stage ────────────────────────────────────────────
 
 bandit:
   stage: security
