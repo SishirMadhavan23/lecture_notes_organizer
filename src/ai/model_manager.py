@@ -129,10 +129,12 @@ def _query_ollama(text: str, config: dict[str, Any]) -> dict[str, Any]:
             "num_ctx": config.get("context_length", 4096),
         },
     }
+    timeout = config.get("timeout", 120)
+
     resp = requests.post(
-        f"{base_url}/api/generate",
-        json=payload,
-        timeout=config.get("timeout", 120),
+       f"{base_url}/api/generate",
+       json=payload,
+       timeout=timeout,
     )
     if resp.status_code == 404:
         raise ModelNotFoundError(f"Model '{model}' not found. Run: ollama pull {model}")

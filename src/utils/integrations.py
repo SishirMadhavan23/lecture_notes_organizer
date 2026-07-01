@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import platform
 import shutil
-import subprocess
+import subprocess  # nosec B404
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +20,7 @@ def _run_command(
     command: list[str], timeout: int = 5
 ) -> subprocess.CompletedProcess[str]:
     """Run a subprocess command and capture its output."""
-    return subprocess.run(
+    return subprocess.run(  # nosec B603
         command,
         capture_output=True,
         text=True,

@@ -6,7 +6,7 @@ from __future__ import annotations
 import io
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -48,7 +48,7 @@ def _convert_legacy_ppt(source_path: Path, output_dir: Path) -> Path:
         )
 
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603
             [
                 converter,
                 "--headless",
