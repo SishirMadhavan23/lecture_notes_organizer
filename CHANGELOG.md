@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flashcards page generated from existing local note metadata
 - Web documentation for local installation, offline runtime, Ollama, Tesseract, and troubleshooting
 - Web testing report for the offline Streamlit workflow
+- Comprehensive Streamlit UI test coverage for app routing, themed components, note cards, upload flows, settings interactions, search, system status, view notes, and flashcards
 
 ### Notes
 - The project remains a Streamlit web application

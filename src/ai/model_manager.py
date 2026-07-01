@@ -155,7 +155,7 @@ def _parse_json_response(response_text: str, original_text: str) -> dict[str, An
 
     if not json_match:
         json_match = re.search(
-            r"\{[^{}]*\"title\"[^{}]*\}",
+            r"(\{[^{}]*\"title\"[^{}]*\})",
             response_text,
             re.DOTALL,
         )

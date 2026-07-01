@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+# Prevent pytest from collecting these as tests
+__test__ = False
+
 import logging
 import platform
 import shutil
