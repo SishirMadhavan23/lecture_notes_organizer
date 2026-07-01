@@ -109,7 +109,8 @@ def temp_docx_file(temp_dir: Path) -> Path:
     docx_path = temp_dir / "test.docx"
     doc_content = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/'
+        'wordprocessingml/2006/main">'
         "<w:body>"
         "<w:p><w:r><w:t>Test Document Content</w:t></w:r></w:p>"
         "<w:p><w:r><w:t>Second paragraph</w:t></w:r></w:p>"
@@ -127,7 +128,8 @@ def temp_docx_file(temp_dir: Path) -> Path:
     )
     rels = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/'
+        'package/2006/relationships">'
         '<Relationship Id="rId1" '
         'Type="http://schemas.openxmlformats.org/officeDocument'
         '/2006/relationships/officeDocument" '
